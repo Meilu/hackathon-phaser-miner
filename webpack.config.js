@@ -5,6 +5,7 @@ var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 // Phaser webpack config
 var phaserModule = path.join(__dirname, '/node_modules/phaser/');
+var phaserIsometric =  path.join(__dirname, '/node_modules/phaser-plugin-isometric/dist/phaser-plugin-isometric.min.js');
 var phaser = path.join(phaserModule, 'build/custom/phaser-split.js');
 var pixi = path.join(phaserModule, 'build/custom/pixi.js');
 var p2 = path.join(phaserModule, 'build/custom/p2.js');
@@ -47,6 +48,7 @@ module.exports = {
       'phaser': phaser,
       'pixi': pixi,
       'p2': p2,
+      'phaserIsometric': phaserIsometric
     }
   },
   devtool: 'source-map'

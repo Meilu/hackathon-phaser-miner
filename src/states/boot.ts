@@ -4,6 +4,7 @@ export class Boot extends Phaser.State {
     preload() {
         // Preload anything related to the preloader image.
        this.load.image('preloadBar', 'assets/images/loader.png');
+
     }
 
     create() {

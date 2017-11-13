@@ -1,9 +1,11 @@
 /// <reference path="../node_modules/phaser/typescript/phaser.d.ts"/>
 /// <reference path="../node_modules/phaser/typescript/pixi.d.ts"/>
+/// <reference path="../node_modules/phaser-plugin-isometric/dist/phaser.plugin.isometric.d.ts"/>
 
 import 'pixi';
 import 'p2';
 import * as Phaser from 'phaser';
+
 import Config from './config';
 import { Miner } from "./game";
 
@@ -20,6 +22,7 @@ class SimpleGame {
   }
 
   create() {
+    debugger;
     this.cursors = this.game.input.keyboard.createCursorKeys();
   }
 
