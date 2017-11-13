@@ -6,6 +6,10 @@ export class Preloader extends Phaser.State {
 
     preload() {
         this.preloadBar = this.add.sprite(200,250, 'preloadBar');
+
+        // Preload anything related to the preloader image.
+       this.load.image('tile', 'assets/images/tile_gray.png');
+
         this.load.setPreloadSprite(this.preloadBar);
     }
 

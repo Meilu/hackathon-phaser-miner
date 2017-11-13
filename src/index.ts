@@ -22,7 +22,6 @@ class SimpleGame {
   }
 
   create() {
-    debugger;
     this.cursors = this.game.input.keyboard.createCursorKeys();
   }
 
