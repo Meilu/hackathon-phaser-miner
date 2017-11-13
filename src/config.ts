@@ -1,4 +1,4 @@
 export default {
-  width: 1800,
-  height: 900
+  width: "100%",
+  height: "100%"
 }
