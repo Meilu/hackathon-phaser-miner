@@ -15,6 +15,8 @@ export class Preloader extends Phaser.State {
     // Preload anything related that we want to be loaded at the start of the game here.
     this.load.image('grasTile', 'assets/images/gras-tile.png');
     this.load.image('stoneTile', 'assets/images/stone-tile.png');
+    this.load.image('sandTile', 'assets/images/sand-tile.png');
+
 
   }
 

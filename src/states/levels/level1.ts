@@ -4,16 +4,17 @@ export class Level1 extends Phaser.State {
 
   private _tileMappings = {
     0: "stoneTile",
-    1: "grasTile"
+    1: "grasTile",
+    2: "sandTile"
   }
 
   private _tilePositions: number[][] = [
-    [1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1]
+    [1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 2, 2, 2, 2, 0, 1],
+    [1, 0, 2, 2, 2, 2, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1]
   ];
 
   private _tileGroup;
