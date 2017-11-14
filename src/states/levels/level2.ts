@@ -8,6 +8,8 @@ export class Level2 extends Phaser.State {
     private _cursors: Phaser.CursorKeys;
     private _house: Phaser.Plugin.Isometric.IsoSprite;
 
+    private _playerDirection = Direction.S;
+
     preload() {
         this.game.plugins.add(<any>new Phaser.Plugin.Isometric(this.game));
 
@@ -36,14 +38,7 @@ export class Level2 extends Phaser.State {
         (<any>this.game).physics.isoArcade.gravity.setTo(0, 0, -500);
 
         this.spawnTiles();
-
-        // Create another cube as our 'player', and set it up just like the cubes above.
-        this._player = (<any>this.add).isoSprite(128, 128, 0, 'tile', 0, this._buildingsGroup);
-        this._player.tint = 0x86bfda;
-        this._player.anchor.set(0.5);
-
-        (<any>this.game).physics.isoArcade.enable(this._player);
-        this._player.body.collideWorldBounds = true;
+        this._player = this.createPlayer();
 
         // Set up our controls.
         this._cursors = this.game.input.keyboard.createCursorKeys();
@@ -57,31 +52,15 @@ export class Level2 extends Phaser.State {
             Phaser.Keyboard.A,
             Phaser.Keyboard.D,
             Phaser.Keyboard.W,
-            Phaser.Keyboard.S
+            Phaser.Keyboard.S,
+            Phaser.Keyboard.B
         ]);
-
-        var space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-
-        space.onDown.add(function () {
-            this._player.body.velocity.z = 300;
-        }, this);
 
         // Make the camera follow the player.
         this.game.camera.follow(this._player);
 
         // Provide a 3D position for the cursor
         this._cursorPosition = new Phaser.Plugin.Isometric.Point3();
-
-        var tileWidth = 92;
-        this._house = (<any>this.game).add.isoSprite(tileWidth * 4, tileWidth * 4, 0, 'house', 0, this._buildingsGroup);
-        this._house.tint = 0x86bfda;
-        this._house.anchor.set(0.5, 1);
-
-        // // Enable the physics body on this cube.
-        (<any>this.game).physics.isoArcade.enable(this._house);
-        this._house.body.immovable = true;
-
-        this._house.body.collideWorldBounds = true;
     }
 
     update() {
@@ -110,32 +89,25 @@ export class Level2 extends Phaser.State {
             }
         }, this);
 
-        // Move the player at this speed.
-        var speed = 200;
-
-        if (this._cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W)) {
-            this._player.body.velocity.y = -speed;
-        }
-        else if (this._cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S)) {
-            this._player.body.velocity.y = speed;
-        }
-        else {
-            this._player.body.velocity.y = 0;
+        if (this.game.input.keyboard.isDown(Phaser.Keyboard.B)) {
+            this.wantToBuildHouse();
         }
 
-        if (this._cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A)) {
-            this._player.body.velocity.x = speed;
-        }
-        else if (this._cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D)) {
-            this._player.body.velocity.x = -speed;
-        }
-        else {
-            this._player.body.velocity.x = 0;
-        }
+        this.movePlayer();
 
         // Our collision and sorting code again.
         (<any>this.game).physics.isoArcade.collide(this._buildingsGroup);
         (<any>this.game).iso.topologicalSort(this._buildingsGroup);
+    }
+
+    render() {
+        // this._groundGroup.forEach((sprite: any) => {
+        //     this.game.debug.body(sprite);
+        // }, this);
+        // this._buildingsGroup.forEach((sprite: any) => {
+        //     this.game.debug.body(sprite);
+        // }, this);
+        // this.game.debug.pixel(10, 10, "blue", 10);
     }
 
     private spawnTiles(): void {
@@ -154,12 +126,115 @@ export class Level2 extends Phaser.State {
         }
     }
 
+    private createPlayer(): Phaser.Plugin.Isometric.IsoSprite {
+        var player: Phaser.Plugin.Isometric.IsoSprite = (<any>this.add).isoSprite(550, 550, 0, "spaceCraftNE", 0, this._buildingsGroup);
+        //player.loadTexture("spaceCraftS");
+
+        player.anchor.set(0.5);
+
+        (<any>this.game).physics.isoArcade.enable(player);
+        player.body.collideWorldBounds = true;
+        player.body.setSize(200, 200, 70, -50, -50);
+
+        var space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+        space.onDown.add(() => {
+            player.body.velocity.z = 600;
+        }, this);
+
+        return player;
+    }
+
+    private movePlayer() {
+        var isUpKeyDown = this._cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W);
+        var isRightKeyDown = this._cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D);
+        var isLeftKeyDown = this._cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A);
+        var isDownKeyDown = this._cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S);
+
+        // Move the player at this speed.
+        var speed = 200;
+        var diagonalSpeed = 230;
+
+        var newDirection: Direction = undefined;
+        if (isUpKeyDown) {
+            if (isLeftKeyDown) {
+                newDirection = Direction.NW;
+                this._player.body.velocity.x = 0;
+                this._player.body.velocity.y = -diagonalSpeed;
+            }
+            else if (isRightKeyDown) {
+                newDirection = Direction.NE;
+                this._player.body.velocity.x = -diagonalSpeed;
+                this._player.body.velocity.y = 0;
+            }
+            else {
+                newDirection = Direction.N;
+                this._player.body.velocity.x = -speed;
+                this._player.body.velocity.y = -speed;
+            }
+        }
+        else if (isDownKeyDown) {
+            if (isLeftKeyDown) {
+                newDirection = Direction.SW;
+                this._player.body.velocity.x = diagonalSpeed;
+                this._player.body.velocity.y = 0;
+            }
+            else if (isRightKeyDown) {
+                newDirection = Direction.SE;
+                this._player.body.velocity.x = 0;
+                this._player.body.velocity.y = diagonalSpeed;
+            }
+            else {
+                newDirection = Direction.S;
+                this._player.body.velocity.x = speed;
+                this._player.body.velocity.y = speed;
+            }
+        }
+        else if (isLeftKeyDown) {
+            newDirection = Direction.W;
+            this._player.body.velocity.x = speed;
+            this._player.body.velocity.y = -speed;
+        }
+        else if (isRightKeyDown) {
+            newDirection = Direction.E;
+            this._player.body.velocity.x = -speed;
+            this._player.body.velocity.y = speed;
+        }
+        else {
+            this._player.body.velocity.x = 0;
+            this._player.body.velocity.y = 0;
+        }
+
+        // Load the right direction texture.
+        if (newDirection != undefined && newDirection != null && newDirection != this._playerDirection) {
+            this._player.loadTexture("spaceCraft" + Direction[newDirection].toString());
+            this._playerDirection = newDirection;
+        }
+    }
+
+    private wantToBuildHouse() {
+        if (this._house)
+            return;
+
+        this._house = (<any>this.game).add.isoSprite(0, 0, 0, 'house', 0, this._buildingsGroup);
+        this._house.tint = 0x86bfda;
+        this._house.anchor.set(0.5, 0);
+
+        // Enable the physics body on this cube.
+        (<any>this.game).physics.isoArcade.enable(this._house);
+        this._house.body.setSize(280, 280, 100, -80, -80);
+        this._house.body.immovable = true;
+
+        this._house.body.collideWorldBounds = true;
+    }
+
     private buildHouse(isoX: number, isoY: number) {
         var house = (<any>this.game.add).isoSprite(isoX, isoY, 0, 'house', 0, this._buildingsGroup);
         house.anchor.set(0.5, 0);
 
         // Enable the physics body on this cube.
         (<any>this.game).physics.isoArcade.enable(house);
+        house.body.setSize(280, 280, 100, -80, -80);
         house.body.immovable = true;
 
         house.body.collideWorldBounds = true;
@@ -167,4 +242,15 @@ export class Level2 extends Phaser.State {
         if (this._house)
             this._house.destroy();
     }
+}
+
+enum Direction {
+    E,
+    N,
+    NE,
+    NW,
+    S,
+    SE,
+    SW,
+    W
 }

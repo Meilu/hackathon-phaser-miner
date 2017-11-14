@@ -13,6 +13,15 @@ export class Preloader extends Phaser.State {
     this.load.image('tile', 'assets/images/tile2.png');
     this.load.image('house', 'assets/images/house.png')
 
+    this.load.image('spaceCraftE', 'assets/images/spaceCraft/spaceCraft4_E.png');
+    this.load.image('spaceCraftN', 'assets/images/spaceCraft/spaceCraft4_N.png');
+    this.load.image('spaceCraftNE', 'assets/images/spaceCraft/spaceCraft4_NE.png');
+    this.load.image('spaceCraftNW', 'assets/images/spaceCraft/spaceCraft4_NW.png');
+    this.load.image('spaceCraftS', 'assets/images/spaceCraft/spaceCraft4_S.png');
+    this.load.image('spaceCraftSE', 'assets/images/spaceCraft/spaceCraft4_SE.png');
+    this.load.image('spaceCraftSW', 'assets/images/spaceCraft/spaceCraft4_SW.png');
+    this.load.image('spaceCraftW', 'assets/images/spaceCraft/spaceCraft4_W.png');
+
     // This will start and show our preloadbar, phaser will automatically fill this bar as more assets are loaded.
     this.load.setPreloadSprite(this.preloadBar);
 
