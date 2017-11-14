@@ -17,6 +17,8 @@ export class Level1 extends Phaser.State {
     [1, 1, 1, 1, 1, 1, 1, 1]
   ];
 
+  private _cursors: any;
+
   private _tileGroup;
 
   preload() {
@@ -35,7 +37,7 @@ export class Level1 extends Phaser.State {
 
     // Create our tilegroup;
     this._tileGroup = this.add.group();
-
+    this._cursors = this.game.input.keyboard.createCursorKeys();
 
     // Loop through rows
     for (var i = 0; i < this._tilePositions.length; i++) {
@@ -68,7 +70,9 @@ export class Level1 extends Phaser.State {
   }
 
   update() {
-
+    if (this._cursors.next.isDown) {
+      this.game.state.start('Level2', true, false);
+    }
   }
 
   /**
