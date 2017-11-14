@@ -1,63 +1,100 @@
-
-
-import 'phaserIsometric';
+import { TileSprite } from './../../sprites/tile.sprite';
 
 export class Level1 extends Phaser.State {
 
-    isoGroup: any;
-    cursorPos: any;
+  private _tileMappings = {
+    0: "stoneTile",
+    1: "grasTile",
+    2: "sandTile"
+  }
 
-    preload() {
-        this.game.plugins.add(<any>new Phaser.Plugin.Isometric(this.game));
+  private _tilePositions: number[][] = [
+    [1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 2, 2, 2, 2, 0, 1],
+    [1, 0, 2, 2, 2, 2, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1]
+  ];
 
-        // This is used to set a game canvas-based offset for the 0, 0, 0 isometric coordinate - by default
-        // this point would be at screen coordinates 0, 0 (top left) which is usually undesirable.
-        (<any>this.game).iso.anchor.setTo(0.5, 0.2);
+  private _tileGroup;
+
+  preload() {
+
+  }
+
+  /**
+   * Because we are using scalemode.RESIZE, this function will be called automatically anytime the window is resized
+   * here we can reposition any element if needed.
+   */
+  resize() {
+    console.log("resizing level1");
+  }
+
+  create() {
+
+    // Create our tilegroup;
+    this._tileGroup = this.add.group();
+
+
+    // Loop through rows
+    for (var i = 0; i < this._tilePositions.length; i++) {
+
+      // Loop through columns
+      for (var j = 0; j < this._tilePositions[i].length; j++) {
+
+        let x = j * 64;
+        let y = i * 64;
+
+        let tileType = this._tilePositions[i][j];
+
+        // Determine the tiletype.
+        let mappedTileType = this._tileMappings[tileType];
+
+        let sprite = new TileSprite(this.game, x, y, mappedTileType);
+
+        var isoPoint = this.cartesianToIsometric({ x: x, y: y });
+        sprite.x = isoPoint.x;
+        sprite.y = isoPoint.y;
+
+        // Now add it to the group
+        this._tileGroup.add(sprite);
+      }
     }
 
-    create() {
-        this.isoGroup = this.add.group();
+    this._tileGroup.x = this.world.centerX;
+    this._tileGroup.y = this.world.centerY - (this._tileGroup.height / 2);
 
-        this.spawnTiles();
+  }
 
-        // Provide a 3D position for the cursor
-        this.cursorPos = new Phaser.Plugin.Isometric.Point3();
-    }
+  update() {
 
-    update() {
-        // Update the cursor position.
-        // It's important to understand that screen-to-isometric projection means you have to specify a z position manually, as this cannot be easily
-        // determined from the 2D pointer position without extra trickery. By default, the z position is 0 if not set.
-        (<any>this.game).iso.unproject(this.game.input.activePointer.position, this.cursorPos);
+  }
 
-        // Loop through all tiles and test to see if the 3D position from above intersects with the automatically generated IsoSprite tile bounds.
-        this.isoGroup.forEach((tile: any) => {
-            var inBounds = tile.isoBounds.containsXY(this.cursorPos.x, this.cursorPos.y);
-            // If it does, do a little animation and tint change.
-            if (!tile.selected && inBounds) {
-                tile.selected = true;
-                tile.tint = 0x86bfda;
-                this.game.add.tween(tile).to({ isoZ: 4 }, 200, Phaser.Easing.Quadratic.InOut, true);
-            }
-            // If not, revert back to how it was.
-            else if (tile.selected && !inBounds) {
-                tile.selected = false;
-                tile.tint = 0xffffff;
-                this.game.add.tween(tile).to({ isoZ: 0 }, 200, Phaser.Easing.Quadratic.InOut, true);
-            }
-        });
-    }
+  /**
+   * converts cartersian coordinates to isometric ones
+   * @param cartPt
+   */
+  private cartesianToIsometric(cartPt: any) {
+    var tempPt = new Phaser.Point();
 
-    private spawnTiles(): void {
-        var tile;
-       
-        for (var xx = 0; xx < 256; xx += 38) {
-            for (var yy = 0; yy < 256; yy += 38) {
-                // Create a tile using the new game.add.isoSprite factory method at the specified position.
-                // The last parameter is the group you want to add it to (just like game.add.sprite)
-                tile = (<any>this.add).isoSprite(xx, yy, 0, 'tile', 0, this.isoGroup);         
-                tile.anchor.set(0.5, 0);
-            }
-        }
-    }
- }
+    tempPt.x = cartPt.x - cartPt.y;
+    tempPt.y = (cartPt.x + cartPt.y) / 2;
+
+    return tempPt;
+  }
+
+  /**
+   * convert isometric to cartesian.
+   * @param isoPt
+   */
+  private isometricToCartesian(isoPt: any) {
+    var tempPt = new Phaser.Point();
+
+    tempPt.x = (2 * isoPt.y + isoPt.x) / 2;
+    tempPt.y = (2 * isoPt.y - isoPt.x) / 2;
+
+    return tempPt;
+  }
+
+}

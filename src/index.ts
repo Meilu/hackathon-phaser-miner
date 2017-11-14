@@ -18,7 +18,7 @@ class SimpleGame {
   }
 
   preload() {
-    
+
   }
 
   create() {

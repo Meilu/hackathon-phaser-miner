@@ -6,16 +6,24 @@ export class Preloader extends Phaser.State {
 
   preload() {
 
+<<<<<<< HEAD
+        // Preload anything related to the preloader image.
+       this.load.image('tile', 'assets/images/tile2.png');
+       this.load.image('house', 'assets/images/house.png')
+=======
     // Add the preloadbar sprite.
     this.preloadBar = this.add.sprite(200, 250, 'preloadBar');
-
-    // Preload anything related to the preloader image.
-    this.load.image('tile', 'assets/images/tile2.png');
-    this.load.image('house', 'assets/images/house.png')
+>>>>>>> 220d65d00636b1d7e7a794548a7a24f61239af52
 
     // This will start and show our preloadbar, phaser will automatically fill this bar as more assets are loaded.
     this.load.setPreloadSprite(this.preloadBar);
 
+<<<<<<< HEAD
+    create() {
+        this.game.state.start('Level2', true, false);
+    }
+ }
+=======
     // Preload anything related that we want to be loaded at the start of the game here.
     this.load.image('grasTile', 'assets/images/gras-tile.png');
     this.load.image('stoneTile', 'assets/images/stone-tile.png');
@@ -24,7 +32,8 @@ export class Preloader extends Phaser.State {
 
   }
 
-    create() {
-        this.game.state.start('Level2', true, false);
-    }
- }
+  create() {
+    this.game.state.start('Level1', true, false);
+  }
+}
+>>>>>>> 220d65d00636b1d7e7a794548a7a24f61239af52

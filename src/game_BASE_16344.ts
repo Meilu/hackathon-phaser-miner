@@ -3,7 +3,6 @@ import * as Phaser from 'phaser';
 import { Boot } from "./states/boot";
 import { Preloader } from "./states/preloader";
 import { Level1 } from './states/levels/level1';
-import { Level2 } from './states/levels/level2';
 
 export class Miner extends Phaser.Game {
 
@@ -12,8 +11,7 @@ export class Miner extends Phaser.Game {
         this.state.add('Boot', Boot, false);
         this.state.add('Preloader', Preloader, false);
         this.state.add('Level1', Level1, false);
-        this.state.add('Level2', Level2, false);
-
+        
         this.state.start('Boot');
     }
 }
