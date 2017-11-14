@@ -70,7 +70,7 @@ export class Level1 extends Phaser.State {
   }
 
   update() {
-    if (this._cursors.next.isDown) {
+    if (this._cursors.right.isDown) {
       this.game.state.start('Level2', true, false);
     }
   }
