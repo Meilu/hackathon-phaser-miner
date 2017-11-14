@@ -1,6 +1,7 @@
 /// <reference path="../node_modules/phaser/typescript/phaser.d.ts"/>
 /// <reference path="../node_modules/phaser/typescript/pixi.d.ts"/>
 /// <reference path="../node_modules/phaser-plugin-isometric/dist/phaser.plugin.isometric.d.ts"/>
+/// <reference path="../node_modules/phaser-tiled/typescript/phaser-tiled.d.ts"/>
 
 import 'pixi';
 import 'p2';
@@ -15,6 +16,7 @@ class SimpleGame {
 
   constructor() {
     this.game = new Miner();
+
   }
 
   preload() {
@@ -23,6 +25,7 @@ class SimpleGame {
 
   create() {
     this.cursors = this.game.input.keyboard.createCursorKeys();
+
   }
 
   update() {

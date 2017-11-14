@@ -9,19 +9,14 @@ export class Preloader extends Phaser.State {
     // Add the preloadbar sprite.
     this.preloadBar = this.add.sprite(200, 250, 'preloadBar');
 
-    // Preload anything related to the preloader image.
-    this.load.image('tile', 'assets/images/tile2.png');
-    this.load.image('house', 'assets/images/house.png')
+    this.game.load.tilemap('level1', '/assets/maps/level1.json', null, Phaser.Tilemap.TILED_JSON);
+    this.load.image('desertSprite', '/assets/images/desert.png');
+
+    // Sprite animations for our hover miner, all have 2 frames for the animation.
+    this.game.load.atlas('hoverminer', 'assets/images/copter-sprites.png', 'assets/images/copter-sprites.json');
 
     // This will start and show our preloadbar, phaser will automatically fill this bar as more assets are loaded.
     this.load.setPreloadSprite(this.preloadBar);
-
-    // Preload anything related that we want to be loaded at the start of the game here.
-    this.load.image('grasTile', 'assets/images/gras-tile.png');
-    this.load.image('stoneTile', 'assets/images/stone-tile.png');
-    this.load.image('sandTile', 'assets/images/sand-tile.png');
-
-
   }
 
   create() {

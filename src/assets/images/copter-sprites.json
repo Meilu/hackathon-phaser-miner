@@ -1,0 +1,173 @@
+{
+  "frames": [{
+    "filename": "copter-down1",
+    "frame": {
+      "x": 38,
+      "y": 25,
+      "w": 27,
+      "h": 35
+    },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {
+      "x": 0,
+      "y": 0,
+      "w": 27,
+      "h": 35
+    },
+    "sourceSize": {
+      "w": 27,
+      "h": 35
+    }
+  }, {
+    "filename": "copter-down2",
+    "frame": {
+      "x": 0,
+      "y": 25,
+      "w": 27,
+      "h": 35
+    },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {
+      "x": 0,
+      "y": 0,
+      "w": 27,
+      "h": 35
+    },
+    "sourceSize": {
+      "w": 27,
+      "h": 35
+    }
+  }, {
+    "filename": "copter-left1",
+    "frame": {
+      "x": 38,
+      "y": 0,
+      "w": 37,
+      "h": 24
+    },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {
+      "x": 0,
+      "y": 0,
+      "w": 37,
+      "h": 24
+    },
+    "sourceSize": {
+      "w": 37,
+      "h": 24
+    }
+  }, {
+    "filename": "copter-left2",
+    "frame": {
+      "x": 0,
+      "y": 0,
+      "w": 37,
+      "h": 24
+    },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {
+      "x": 0,
+      "y": 0,
+      "w": 37,
+      "h": 24
+    },
+    "sourceSize": {
+      "w": 37,
+      "h": 24
+    }
+  }, {
+    "filename": "copter-right1",
+    "frame": {
+      "x": 38,
+      "y": 61,
+      "w": 37,
+      "h": 24
+    },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {
+      "x": 0,
+      "y": 0,
+      "w": 37,
+      "h": 24
+    },
+    "sourceSize": {
+      "w": 37,
+      "h": 24
+    }
+  }, {
+    "filename": "copter-right2",
+    "frame": {
+      "x": 0,
+      "y": 61,
+      "w": 37,
+      "h": 24
+    },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {
+      "x": 0,
+      "y": 0,
+      "w": 37,
+      "h": 24
+    },
+    "sourceSize": {
+      "w": 37,
+      "h": 24
+    }
+  }, {
+    "filename": "copter-up1",
+    "frame": {
+      "x": 76,
+      "y": 36,
+      "w": 27,
+      "h": 35
+    },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {
+      "x": 0,
+      "y": 0,
+      "w": 27,
+      "h": 35
+    },
+    "sourceSize": {
+      "w": 27,
+      "h": 35
+    }
+  }, {
+    "filename": "copter-up2",
+    "frame": {
+      "x": 76,
+      "y": 0,
+      "w": 27,
+      "h": 35
+    },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": {
+      "x": 0,
+      "y": 0,
+      "w": 27,
+      "h": 35
+    },
+    "sourceSize": {
+      "w": 27,
+      "h": 35
+    }
+  }],
+  "meta": {
+    "app": "https://www.leshylabs.com/apps/sstool/",
+    "version": "Leshy SpriteSheet Tool v0.8.4",
+    "image": "copter-sprites.png",
+    "size": {
+      "w": 103,
+      "h": 85
+    },
+    "scale": 1
+  }
+}
