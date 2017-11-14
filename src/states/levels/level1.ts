@@ -1,4 +1,5 @@
 import { TileSprite } from './../../sprites/tile.sprite';
+import { Sprite } from 'phaser';
 
 export class Level1 extends Phaser.State {
 
@@ -22,7 +23,7 @@ export class Level1 extends Phaser.State {
   private _tileGroup;
 
   preload() {
-
+      
   }
 
   /**
@@ -63,6 +64,14 @@ export class Level1 extends Phaser.State {
         this._tileGroup.add(sprite);
       }
     }
+
+    var buildingsGroup = this.add.group();
+    var tileWidth = 92;
+    var house = new Sprite(this.game, 10, 10, "house");
+    buildingsGroup.add(house);
+    house.anchor.set(0.5, 1);
+    buildingsGroup.x = this.world.centerX;
+    buildingsGroup.y = this.world.centerY;
 
     this._tileGroup.x = this.world.centerX;
     this._tileGroup.y = this.world.centerY - (this._tileGroup.height / 2);
