@@ -69,6 +69,12 @@ export class Level2 extends Phaser.State {
 
         // Provide a 3D position for the cursor
         this._cursorPosition = new Phaser.Plugin.Isometric.Point3();
+
+        // Start the map with two buildings.
+        this.startBuilding(2);
+        this.build(256, 768);
+        this.startBuilding(4);
+        this.build(640, 192);
     }
 
     update() {
@@ -109,11 +115,9 @@ export class Level2 extends Phaser.State {
             });
         }
 
-        if (this._isBuilding) {
-            // On ESC stop building.
-            if (this.game.input.keyboard.isDown(Phaser.Keyboard.ESC)) {
-                this.stopBuilding();
-            }
+        // On ESC stop building.
+        if (this._isBuilding && this.game.input.keyboard.isDown(Phaser.Keyboard.ESC)) {
+            this.stopBuilding();
         }
         else {//if (this.game.input.keyboard.isDown(Phaser.Keyboard.B)) {
             if (this.game.input.keyboard.isDown(Phaser.Keyboard.ONE))
@@ -165,21 +169,21 @@ export class Level2 extends Phaser.State {
         tileArray[6] = 'lava';
 
         var tiles = [
-            1, 1, 1, 2, 2, 6, 6, 1, 1, 1, 2, 2, 6, 6, 1,
-            1, 1, 2, 2, 2, 6, 6, 1, 1, 2, 2, 2, 6, 6, 1,
-            1, 1, 2, 2, 3, 2, 6, 1, 1, 2, 2, 3, 2, 6, 1,
-            2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 0, 0, 2, 1,
-            2, 2, 3, 0, 0, 0, 2, 2, 2, 3, 0, 0, 0, 2, 1,
-            3, 2, 2, 0, 0, 0, 2, 3, 2, 2, 0, 0, 0, 2, 1,
-            2, 2, 0, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 1,
-            1, 1, 1, 2, 2, 6, 6, 1, 1, 1, 2, 2, 6, 6, 1,
-            1, 1, 2, 2, 2, 6, 6, 1, 1, 2, 2, 2, 6, 6, 1,
-            1, 1, 2, 2, 3, 2, 6, 1, 1, 2, 2, 3, 2, 6, 1,
-            2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 0, 0, 2, 1,
-            2, 2, 3, 0, 0, 0, 2, 2, 2, 3, 0, 0, 0, 2, 1,
-            3, 2, 2, 0, 0, 0, 2, 3, 2, 2, 0, 0, 0, 2, 1,
-            2, 2, 0, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 1,
-            2, 2, 0, 0, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 1,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            3, 3, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4,
+            3, 3, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4,
+            3, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 4, 4,
+            3, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 4, 4,
+            3, 3, 3, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
         ];
 
         var i = 0;
@@ -301,7 +305,9 @@ export class Level2 extends Phaser.State {
     }
 
     private startBuilding(buildingNumber: number) {
-        // For now, we always build a house.
+        if (this._isBuilding)
+            this.stopBuilding();
+
         this._buildingSprite = (<any>this.game).add.isoSprite(0, 0, 0, 'building' + buildingNumber, 0, this._buildingsGroup);
         this._buildingSprite.tint = 0x86bfda;
         this._buildingSprite.anchor.set(0.5, 0.5);
@@ -353,14 +359,9 @@ export class Level2 extends Phaser.State {
         this._isBuilding = false;
     }
 
-    private build(isoX: number, isoY: number) {
+    private build(isoX?: number, isoY?: number) {
         // Stop following the cursor.
         //this._buildingSprite.body.position = new Phaser.Point();
-
-        // // Set the building to the right position.
-        // this._buildingSprite.body.moves = false;
-        // this._buildingSprite.body.immovable = true;
-        // this._buildingSprite.isoPosition.setTo(isoX, isoY);
 
         var buildingSprite = this._buildingSprite;
 
@@ -368,8 +369,17 @@ export class Level2 extends Phaser.State {
         this._buildingSprite = undefined;
         this.stopBuilding();
 
+        if (isoX || isoY) {
+            // Set the building to the right position.
+            buildingSprite.body.moves = false;
+            buildingSprite.body.immovable = true;
+            buildingSprite.isoPosition.setTo(isoX, isoY);
+        }
+
+        // Set the tint back to normal.
         buildingSprite.tint = 0xffffff;
 
+        // Animate the building by bouncing downward.
         var tween = this.game.add.tween(buildingSprite).to({ isoZ: 70 }, 1).to({ isoZ: 0 }, 1000, Phaser.Easing.Bounce.Out);
         tween.start();
     }

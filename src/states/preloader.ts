@@ -5,7 +5,6 @@ export class Preloader extends Phaser.State {
   preloadBar: Phaser.Sprite;
 
   preload() {
-
     // Add the preloadbar sprite.
     this.preloadBar = this.add.sprite(200, 250, 'preloadBar');
 
