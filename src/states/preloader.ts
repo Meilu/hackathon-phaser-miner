@@ -8,6 +8,9 @@ export class Preloader extends Phaser.State {
     // Add the preloadbar sprite.
     this.preloadBar = this.add.sprite(200, 250, 'preloadBar');
 
+    // Load the gamepad spritesheet. Note that the width must equal height of the sprite.
+    this.load.spritesheet('gamepad', 'assets/gamepad/gamepad_spritesheet.png', 100, 100);
+
     this.game.load.tilemap('level1', '/assets/maps/level1.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.image('desertSprite', '/assets/images/desert.png');
 
@@ -44,6 +47,6 @@ export class Preloader extends Phaser.State {
   }
 
   create() {
-    this.game.state.start('Level1', true, false);
+    this.game.state.start('Level2', true, false);
   }
 }

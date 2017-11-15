@@ -1,9 +1,11 @@
 import 'phaserIsometric';
+import '../../scripts/phaser-virtual-joystick.js';
 
 export class Level2 extends Phaser.State {
     private _groundGroup: Phaser.Group;
     private _buildingsGroup: Phaser.Group;
     private _cursorPosition: Phaser.Plugin.Isometric.Point3;
+    private _joystick: any;
     private _player: Phaser.Plugin.Isometric.IsoSprite;
     private _playerDirection = Direction.S;
     private _cursors: Phaser.CursorKeys;
@@ -35,6 +37,13 @@ export class Level2 extends Phaser.State {
 
         // Start the IsoArcade physics system.
         this.game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
+
+        // TODO: bij resizen blijft de joystick staan.
+        // this.game.scale.onSizeChange.add(() => {
+        //     if (this._joystick) {
+        //         this._joystick.position = new Phaser.Point(this.game.width - 150, this.game.height - 150);
+        //     }
+        // });
     }
 
     create() {
@@ -50,19 +59,12 @@ export class Level2 extends Phaser.State {
         // Set up our controls.
         this._cursors = this.game.input.keyboard.createCursorKeys();
 
-        this.game.input.keyboard.addKeyCapture([
-            Phaser.Keyboard.LEFT,
-            Phaser.Keyboard.RIGHT,
-            Phaser.Keyboard.UP,
-            Phaser.Keyboard.DOWN,
-            Phaser.Keyboard.SPACEBAR,
-            Phaser.Keyboard.A,
-            Phaser.Keyboard.D,
-            Phaser.Keyboard.W,
-            Phaser.Keyboard.S,
-            Phaser.Keyboard.B,
-            Phaser.Keyboard.SHIFT
-        ]);
+        // Add the VirtualGamepad plugin to the game.
+        var gamepad = this.game.plugins.add((<any>Phaser.Plugin).VirtualGamepad);
+        // Add a joystick to the game.
+        this._joystick = (<any>gamepad).addJoystick(this.game.width - 150, this.game.height - 150, 1.2, 'gamepad');
+        // Add a button to the game. Place it outside of the screen, since we don't use it.
+        var button = (<any>gamepad).addButton(-100, -100, 1.0, 'gamepad');
 
         // Make the camera follow the player.
         this.game.camera.follow(this._player);
@@ -232,10 +234,10 @@ export class Level2 extends Phaser.State {
     }
 
     private movePlayer() {
-        var isUpKeyDown = this._cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W);
-        var isRightKeyDown = this._cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D);
-        var isLeftKeyDown = this._cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A);
-        var isDownKeyDown = this._cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S);
+        var isUpKeyDown = this._cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W) || this._joystick.properties.up;
+        var isRightKeyDown = this._cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D) || this._joystick.properties.right;
+        var isLeftKeyDown = this._cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A) || this._joystick.properties.left;
+        var isDownKeyDown = this._cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S) || this._joystick.properties.down;
         var isShiftKeyDown = this.game.input.keyboard.isDown(Phaser.Keyboard.SHIFT);
 
         // Move the player at this speed.
