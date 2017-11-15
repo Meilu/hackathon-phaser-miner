@@ -124,8 +124,6 @@ export class Level2 extends Phaser.State {
     }
 
     private spawnTiles(): void {
-        for (var xx = 0; xx < 1000; xx += 92) {
-            for (var yy = 0; yy < 1000; yy += 92) {
         for (var xx = 0; xx < 2000; xx += 92) {
             for (var yy = 0; yy < 2000; yy += 92) {
                 // Create a tile using the new game.add.isoSprite factory method at the specified position.
