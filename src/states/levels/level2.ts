@@ -5,10 +5,12 @@ export class Level2 extends Phaser.State {
     private _buildingsGroup: Phaser.Group;
     private _cursorPosition: Phaser.Plugin.Isometric.Point3;
     private _player: Phaser.Plugin.Isometric.IsoSprite;
-    private _cursors: Phaser.CursorKeys;
-    private _house: Phaser.Plugin.Isometric.IsoSprite;
-
     private _playerDirection = Direction.S;
+    private _cursors: Phaser.CursorKeys;
+
+    private _isBuilding = false;
+    private _buildingSprite: Phaser.Plugin.Isometric.IsoSprite;
+    private _selectedTile: Phaser.Plugin.Isometric.IsoSprite;
 
     preload() {
         this.game.plugins.add(<any>new Phaser.Plugin.Isometric(this.game));
@@ -24,7 +26,7 @@ export class Level2 extends Phaser.State {
         this.game.time.advancedTiming = true;
 
         // In order to have the camera move, we need to increase the size of our world bounds.
-        this.game.world.setBounds(0, 0, 2048, 1024);
+        this.game.world.setBounds(0, 0, 2048 * 2, 1024 * 2);
 
         // Start the IsoArcade physics system.
         this.game.physics.startSystem(Phaser.Plugin.Isometric.ISOARCADE);
@@ -53,7 +55,8 @@ export class Level2 extends Phaser.State {
             Phaser.Keyboard.D,
             Phaser.Keyboard.W,
             Phaser.Keyboard.S,
-            Phaser.Keyboard.B
+            Phaser.Keyboard.B,
+            Phaser.Keyboard.SHIFT
         ]);
 
         // Make the camera follow the player.
@@ -69,9 +72,6 @@ export class Level2 extends Phaser.State {
         // determined from the 2D pointer position without extra trickery. By default, the z position is 0 if not set.
         (<any>this.game).iso.unproject(this.game.input.activePointer.position, this._cursorPosition);
 
-        if (this._house)
-            this._house.body.position = this._cursorPosition;
-
         // Loop through all tiles and test to see if the 3D position from above intersects with the automatically generated IsoSprite tile bounds.
         this._groundGroup.forEach((tile: any) => {
             var inBounds = tile.isoBounds.containsXY(this._cursorPosition.x, this._cursorPosition.y);
@@ -79,7 +79,12 @@ export class Level2 extends Phaser.State {
             if (!tile.selected && inBounds) {
                 tile.selected = true;
                 tile.tint = 0x86bfda;
+                this._selectedTile = tile;
                 this.game.add.tween(tile).to({ isoZ: 4 }, 200, Phaser.Easing.Quadratic.InOut, true);
+
+                // If we are building update the position of the sprite.
+                if (this._isBuilding && this._buildingSprite)
+                    this._buildingSprite.isoPosition.setTo(tile.isoX, tile.isoY);
             }
             // If not, revert back to how it was.
             else if (tile.selected && !inBounds) {
@@ -89,8 +94,14 @@ export class Level2 extends Phaser.State {
             }
         }, this);
 
-        if (this.game.input.keyboard.isDown(Phaser.Keyboard.B)) {
-            this.wantToBuildHouse();
+        if (this._isBuilding) {
+            // On ESC stop building.
+            if (this.game.input.keyboard.isDown(Phaser.Keyboard.ESC)) {
+                this.stopBuilding();
+            }
+        }
+        else if (this.game.input.keyboard.isDown(Phaser.Keyboard.B)) {
+            this.startBuilding();
         }
 
         this.movePlayer();
@@ -101,6 +112,8 @@ export class Level2 extends Phaser.State {
     }
 
     render() {
+        // Use for debugging:
+
         // this._groundGroup.forEach((sprite: any) => {
         //     this.game.debug.body(sprite);
         // }, this);
@@ -113,20 +126,41 @@ export class Level2 extends Phaser.State {
     private spawnTiles(): void {
         for (var xx = 0; xx < 1000; xx += 92) {
             for (var yy = 0; yy < 1000; yy += 92) {
+        for (var xx = 0; xx < 2000; xx += 92) {
+            for (var yy = 0; yy < 2000; yy += 92) {
                 // Create a tile using the new game.add.isoSprite factory method at the specified position.
                 // The last parameter is the group you want to add it to (just like game.add.sprite)
                 var tile = (<any>this.add).isoSprite(xx, yy, 0, 'tile', 0, this._groundGroup);
                 tile.anchor.set(0.5, 0);
 
+                // TODO: debug tile positions.
+                // (<any>this.game).physics.isoArcade.enable(tile);
+                // tile.body.collideWorldBounds = true;
+
                 tile.inputEnabled = true;
                 tile.events.onInputDown.add((tile: Phaser.Plugin.Isometric.IsoSprite) => {
-                    this.buildHouse(tile.isoX, tile.isoY);
+                    if (this._isBuilding)
+                        this.build(tile.isoX, tile.isoY);
+                    else {
+                        // TODO: move player to the clicked tile.
+
+                        // this._player.body.moves = false;
+                        // var tween = this.game.add.tween(this._player).to({ isoX: (tile.isoX), isoY: (tile.isoY) }, 200);
+
+                        // tween.onComplete.add(() => {
+                        //     this._player.body.velocity.x = 0;
+                        //     this._player.body.velocity.y = 0;
+                        //     this._player.body.moves = true;
+                        // });
+                        // tween.start();
+                    }
                 }, this);
             }
         }
     }
 
     private createPlayer(): Phaser.Plugin.Isometric.IsoSprite {
+        // TODO: fix jumping bug when we start on spaceCraftS.
         var player: Phaser.Plugin.Isometric.IsoSprite = (<any>this.add).isoSprite(550, 550, 0, "spaceCraftNE", 0, this._buildingsGroup);
         //player.loadTexture("spaceCraftS");
 
@@ -139,7 +173,7 @@ export class Level2 extends Phaser.State {
         var space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
         space.onDown.add(() => {
-            player.body.velocity.z = 600;
+            player.body.velocity.z = 300;
         }, this);
 
         return player;
@@ -150,10 +184,16 @@ export class Level2 extends Phaser.State {
         var isRightKeyDown = this._cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D);
         var isLeftKeyDown = this._cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A);
         var isDownKeyDown = this._cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S);
+        var isShiftKeyDown = this.game.input.keyboard.isDown(Phaser.Keyboard.SHIFT);
 
         // Move the player at this speed.
         var speed = 200;
         var diagonalSpeed = 230;
+
+        if (isShiftKeyDown) {
+            speed = speed * 2;
+            diagonalSpeed = diagonalSpeed * 2;
+        }
 
         var newDirection: Direction = undefined;
         if (isUpKeyDown) {
@@ -212,35 +252,55 @@ export class Level2 extends Phaser.State {
         }
     }
 
-    private wantToBuildHouse() {
-        if (this._house)
-            return;
+    private startBuilding() {
+        // For now, we always build a house.
+        this._buildingSprite = (<any>this.game).add.isoSprite(0, 0, 0, 'house', 0, this._buildingsGroup);
+        this._buildingSprite.tint = 0x86bfda;
+        this._buildingSprite.anchor.set(0.5, 0.5);
 
-        this._house = (<any>this.game).add.isoSprite(0, 0, 0, 'house', 0, this._buildingsGroup);
-        this._house.tint = 0x86bfda;
-        this._house.anchor.set(0.5, 0);
+        // Enable the physics body on this sprite.
+        (<any>this.game).physics.isoArcade.enable(this._buildingSprite);
+        this._buildingSprite.body.setSize(280, 280, 100, -70, -70);
+        this._buildingSprite.body.collideWorldBounds = true;
 
-        // Enable the physics body on this cube.
-        (<any>this.game).physics.isoArcade.enable(this._house);
-        this._house.body.setSize(280, 280, 100, -80, -80);
-        this._house.body.immovable = true;
+        // Make the building always follow the cursor.
+        //this._buildingSprite.body.position = this._cursorPosition;
 
-        this._house.body.collideWorldBounds = true;
+        // Base the position on the selected tile.
+        this._buildingSprite.body.moves = false;
+        this._buildingSprite.body.immovable = true;
+        this._buildingSprite.isoPosition.setTo(this._selectedTile.isoX, this._selectedTile.isoY);
+
+        this._isBuilding = true;
     }
 
-    private buildHouse(isoX: number, isoY: number) {
-        var house = (<any>this.game.add).isoSprite(isoX, isoY, 0, 'house', 0, this._buildingsGroup);
-        house.anchor.set(0.5, 0);
+    private stopBuilding() {
+        if (this._buildingSprite) {
+            this._buildingSprite.destroy();
+            this._buildingSprite = undefined;
+        }
+        this._isBuilding = false;
+    }
 
-        // Enable the physics body on this cube.
-        (<any>this.game).physics.isoArcade.enable(house);
-        house.body.setSize(280, 280, 100, -80, -80);
-        house.body.immovable = true;
+    private build(isoX: number, isoY: number) {
+        // Stop following the cursor.
+        //this._buildingSprite.body.position = new Phaser.Point();
 
-        house.body.collideWorldBounds = true;
+        // // Set the building to the right position.
+        // this._buildingSprite.body.moves = false;
+        // this._buildingSprite.body.immovable = true;
+        // this._buildingSprite.isoPosition.setTo(isoX, isoY);
 
-        if (this._house)
-            this._house.destroy();
+        var buildingSprite = this._buildingSprite;
+
+        // Stop the building procedure.
+        this._buildingSprite = undefined;
+        this.stopBuilding();
+
+        buildingSprite.tint = 0xffffff;
+        
+        var tween = this.game.add.tween(buildingSprite).to({ isoZ: 70 }, 1).to({ isoZ: 0 }, 1000, Phaser.Easing.Bounce.Out);
+        tween.start();
     }
 }
 
