@@ -9,11 +9,11 @@ export class Preloader extends Phaser.State {
     // Add the preloadbar sprite.
     this.preloadBar = this.add.sprite(200, 250, 'preloadBar');
 
-    this.game.load.tilemap('level1', '/assets/maps/level1.json', null, Phaser.Tilemap.TILED_JSON);
-    this.load.image('desertSprite', '/assets/images/desert.png');
+    // this.game.load.tilemap('level1', '/assets/maps/level1.json', null, Phaser.Tilemap.TILED_JSON);
+    // this.load.image('desertSprite', '/assets/images/desert.png');
 
-    // Sprite animations for our hover miner, all have 2 frames for the animation.
-    this.game.load.atlas('hoverminer', 'assets/images/copter-sprites.png', 'assets/images/copter-sprites.json');
+    // // Sprite animations for our hover miner, all have 2 frames for the animation.
+    // this.game.load.atlas('hoverminer', 'assets/images/copter-sprites.png', 'assets/images/copter-sprites.json');
 
     this.load.image('spaceCraftE', 'assets/images/spaceCraft/spaceCraft4_E.png');
     this.load.image('spaceCraftN', 'assets/images/spaceCraft/spaceCraft4_N.png');
