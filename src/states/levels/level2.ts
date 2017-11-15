@@ -59,12 +59,14 @@ export class Level2 extends Phaser.State {
         // Set up our controls.
         this._cursors = this.game.input.keyboard.createCursorKeys();
 
-        // Add the VirtualGamepad plugin to the game.
-        var gamepad = this.game.plugins.add((<any>Phaser.Plugin).VirtualGamepad);
-        // Add a joystick to the game.
-        this._joystick = (<any>gamepad).addJoystick(this.game.width - 150, this.game.height - 150, 1.2, 'gamepad');
-        // Add a button to the game. Place it outside of the screen, since we don't use it.
-        var button = (<any>gamepad).addButton(-100, -100, 1.0, 'gamepad');
+        if (!this.game.device.desktop) {
+            // Add the VirtualGamepad plugin to the game.
+            var gamepad = this.game.plugins.add((<any>Phaser.Plugin).VirtualGamepad);
+            // Add a joystick to the game.
+            this._joystick = (<any>gamepad).addJoystick(this.game.width - 200, this.game.height - 200, 1.2, 'gamepad');
+            // Add a button to the game. Place it outside of the screen, since we don't use it.
+            var button = (<any>gamepad).addButton(-100, -100, 1.0, 'gamepad');
+        }
 
         // Make the camera follow the player.
         this.game.camera.follow(this._player);
@@ -234,10 +236,10 @@ export class Level2 extends Phaser.State {
     }
 
     private movePlayer() {
-        var isUpKeyDown = this._cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W) || this._joystick.properties.up;
-        var isRightKeyDown = this._cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D) || this._joystick.properties.right;
-        var isLeftKeyDown = this._cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A) || this._joystick.properties.left;
-        var isDownKeyDown = this._cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S) || this._joystick.properties.down;
+        var isUpKeyDown = this._cursors.up.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.W) || (this._joystick && this._joystick.properties.up);
+        var isRightKeyDown = this._cursors.right.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.D) || (this._joystick && this._joystick.properties.right);
+        var isLeftKeyDown = this._cursors.left.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.A) || (this._joystick && this._joystick.properties.left);
+        var isDownKeyDown = this._cursors.down.isDown || this.game.input.keyboard.isDown(Phaser.Keyboard.S) || (this._joystick && this._joystick.properties.down);
         var isShiftKeyDown = this.game.input.keyboard.isDown(Phaser.Keyboard.SHIFT);
 
         // Move the player at this speed.
