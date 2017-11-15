@@ -17,14 +17,6 @@ export class Level1 extends Phaser.State {
     this.game.stage.backgroundColor = "#ffffff";
   }
 
-  /**
-   * Because we are using scalemode.RESIZE, this function will be called automatically anytime the window is resized
-   * here we can reposition any element if needed.
-   */
-  resize() {
-    console.log("resizing level1");
-  }
-
   create() {
     this._map = this.game.add.tilemap('level1');
     this._map.addTilesetImage('desert', 'desertSprite');
@@ -34,7 +26,6 @@ export class Level1 extends Phaser.State {
 
     // Enable collision on the rocks/water layer.
     this._map.setCollisionBetween(1, 100000, true, 'rocks_water');
-
 
     //create player
     var result = this.findObjectsByType('player', 'startpoints')
@@ -54,7 +45,6 @@ export class Level1 extends Phaser.State {
 
     //move player with cursor keys
     this._cursors = this.game.input.keyboard.createCursorKeys();
-
   }
 
 
