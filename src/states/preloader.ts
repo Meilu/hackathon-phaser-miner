@@ -3,10 +3,34 @@ import * as Phaser from 'phaser';
 export class Preloader extends Phaser.State {
 
   preloadBar: Phaser.Sprite;
+  progress: any;
 
   preload() {
     // Add the preloadbar sprite.
-    this.preloadBar = this.add.sprite(200, 250, 'preloadBar');
+    this.preloadBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY - 225, 'logo');
+    // this.progress = this.game.add.text(this.game.world.centerX + 345, this.game.world.centerY + 270, '0%', { fill: 'white' });
+    // this.progress.anchor.setTo(.5, .5);
+    var appicon = this.add.sprite(this.game.world.centerX - 425, this.game.world.centerY - 225, 'appicon');
+
+
+    this.game.load.onFileComplete.add(((progress: any, cacheKey: any, success: any, totalLoaded: any, totalFiles: any) => {
+      //this.progress.text = progress + "%";
+      if (progress === 100) {
+        var music = this.game.add.audio('graven');
+
+        music.play();
+        appicon.inputEnabled = true;
+        this.preloadBar.inputEnabled = true;
+
+        appicon.events.onInputDown.add(this.goTolvl2, this);
+        this.preloadBar.events.onInputDown.add(this.goTolvl2, this);
+      }
+    }), this);
+
+
+    this.game.load.audio('graven', 'assets/ikwilgraven.mp3');
+
+
 
     // Load the gamepad spritesheet. Note that the width must equal height of the sprite.
     this.load.spritesheet('gamepad', 'assets/gamepad/gamepad_spritesheet.png', 100, 100);
@@ -45,8 +69,11 @@ export class Preloader extends Phaser.State {
     // This will start and show our preloadbar, phaser will automatically fill this bar as more assets are loaded.
     this.load.setPreloadSprite(this.preloadBar);
   }
-
-  create() {
+  private goTolvl2() {
     this.game.state.start('Level2', true, false);
+
+  }
+  create() {
+
   }
 }
