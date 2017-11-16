@@ -1,16 +1,32 @@
 import 'phaserIsometric';
 import '../../scripts/phaser-virtual-joystick.js';
+import * as firebase from 'firebase';
+
+export class MinerPlayerDocument {
+    // Database properties.
+    public uid: string;
+    public x = 0;
+    public y = 0;
+    public direction = Direction.S;
+}
+export class MinerPlayer {
+    public uid: string;
+    public direction = Direction.S;
+    public sprite: Phaser.Plugin.Isometric.IsoSprite;
+}
 
 export class Level2 extends Phaser.State {
-    private _groundGroup: Phaser.Group;
-    private _buildingsGroup: Phaser.Group;
     private _cursorPosition: Phaser.Plugin.Isometric.Point3;
     private _joystick: any;
-    private _player: Phaser.Plugin.Isometric.IsoSprite;
-    private _playerDirection = Direction.S;
     private _cursors: Phaser.CursorKeys;
 
+    private _groundGroup: Phaser.Group;
     private _water: Phaser.Plugin.Isometric.IsoSprite[] = [];
+
+    private _buildingsGroup: Phaser.Group;
+
+    private _player: MinerPlayer;
+    private _otherPlayers: MinerPlayer[] = [];
 
     private _isBuilding = false;
     private _buildingSprite: Phaser.Plugin.Isometric.IsoSprite;
@@ -19,7 +35,14 @@ export class Level2 extends Phaser.State {
     private _worldSize = 1;
     private _tileSize = 64;
 
+    private _firebaseApp: firebase.app.App;
+    private _firebaseAuth: firebase.auth.Auth;
+    private _firebaseTableRef: firebase.database.Reference;
+    private _firebasePlayerDocumentRef: firebase.database.Reference;
+
     preload() {
+        this.setupFirebase();
+
         this.game.plugins.add(<any>new Phaser.Plugin.Isometric(this.game));
 
         // This is used to set a game canvas-based offset for the 0, 0, 0 isometric coordinate - by default
@@ -27,7 +50,6 @@ export class Level2 extends Phaser.State {
         // When using camera following, it's best to keep the Y anchor set to 0, which will let the camera
         // cover the full size of your world bounds.
         (<any>this.game).iso.anchor.setTo(0.5, 0);
-
         (<any>this.game).iso.projectionAngle = 0.523599; // 30 degrees
 
         this.game.time.advancedTiming = true;
@@ -54,7 +76,40 @@ export class Level2 extends Phaser.State {
         (<any>this.game).physics.isoArcade.gravity.setTo(0, 0, -500);
 
         this.spawnTiles();
-        this._player = this.createPlayer();
+
+        this._firebaseAuth.onAuthStateChanged((user: firebase.User) => {
+            this._firebasePlayerDocumentRef = this._firebaseApp.database().ref('mining-cart/' + this._firebaseAuth.currentUser.uid);
+            this._firebaseTableRef = this._firebaseApp.database().ref('mining-cart');
+
+            // Create the player.
+            this._player = this.createPlayer(this._firebaseAuth.currentUser.uid, 550, 550);
+
+            this._firebasePlayerDocumentRef.set({
+                x: this._player.sprite.isoX,
+                y: this._player.sprite.isoY,
+                direction: this._player.direction
+            });
+
+            // Make the camera follow the player.
+            this.game.camera.follow(this._player.sprite);
+
+            // Listen to table changes to handle other players.
+            this._firebaseTableRef.on("value", (snapshot: any) => {
+                snapshot.forEach((childSnapshot: any) => {
+                    // Only listen to documents from oither players.
+                    if (childSnapshot.key != this._firebaseAuth.currentUser.uid) {
+                        var document: MinerPlayerDocument = {
+                            uid: childSnapshot.key,
+                            x: childSnapshot.val().x,
+                            y: childSnapshot.val().y,
+                            direction: childSnapshot.val().direction
+                        };
+    
+                        this.handleOtherPlayerDocument(document);
+                    }
+                });
+            });
+        });
 
         // Set up our controls.
         this._cursors = this.game.input.keyboard.createCursorKeys();
@@ -68,9 +123,6 @@ export class Level2 extends Phaser.State {
             var button = (<any>gamepad).addButton(-100, -100, 1.0, 'gamepad');
         }
 
-        // Make the camera follow the player.
-        this.game.camera.follow(this._player);
-
         // Provide a 3D position for the cursor
         this._cursorPosition = new Phaser.Plugin.Isometric.Point3();
 
@@ -79,6 +131,28 @@ export class Level2 extends Phaser.State {
         this.build(256, 768);
         this.startBuilding(4);
         this.build(640, 192);
+    }
+
+    private handleOtherPlayerDocument(document: MinerPlayerDocument) {
+        var exists = false;
+        this._otherPlayers.forEach((player: MinerPlayer) => {
+            if (player.uid == document.uid)
+                exists = true;
+        });
+        // Create a new player if it did not exist yet.
+        if (exists == false) {
+            var newOtherPlayer = this.createPlayer(document.uid, document.x, document.y);
+            newOtherPlayer.sprite.body.moves = false;
+            newOtherPlayer.sprite.body.immovable = true;
+            this._otherPlayers.push(newOtherPlayer);
+        }
+        // Set the position and direction of the other player.
+        this._otherPlayers.forEach((player: MinerPlayer) => {
+            if (player.uid == document.uid) {
+                this.setPosition(player.sprite, document.x, document.y);
+                this.setDirection(player.sprite, document.direction);
+            }
+        });
     }
 
     update() {
@@ -140,14 +214,17 @@ export class Level2 extends Phaser.State {
                 this.startBuilding(7);
         }
 
-        this.movePlayer();
+        if (this._player)
+            this.movePlayer();
 
+        /* DEBUG */
         var debugText = "";
         this._buildingsGroup.forEach((sprite: Phaser.Plugin.Isometric.IsoSprite) => {
-            if (sprite != this._player)
+            if (this._player && sprite != this._player.sprite)
                 debugText += "Building " + sprite.isoPosition.z + " ";
         }, this);
-        debugText += "Player " + this._player.isoPosition.z + " ";
+        if (this._player)
+            debugText += "Player " + this._player.sprite.isoPosition.z + " ";
         this._groundGroup.forEach((sprite: Phaser.Plugin.Isometric.IsoSprite) => {
             if (sprite.isoX == 384 && sprite.isoY == 384) {
                 //if ((<any>sprite).selected) {
@@ -155,6 +232,7 @@ export class Level2 extends Phaser.State {
             }
         }, this);
         this.game.debug.text(debugText, 20, 20);
+        /* DEBUG */
 
         // Our collision and sorting code again.
         (<any>this.game).physics.isoArcade.collide(this._groundGroup);
@@ -174,6 +252,21 @@ export class Level2 extends Phaser.State {
         //     this.game.debug.body(sprite);
         // }, this);
         // this.game.debug.pixel(10, 10, "blue", 10);
+    }
+
+    private setupFirebase() {
+        var config = {
+            apiKey: "AIzaSyBqaEksBFhZbwG4X5J5kfYXSnePM8YkRVk",
+            authDomain: "hackathon-miner.firebaseapp.com",
+            databaseURL: "https://hackathon-miner.firebaseio.com",
+            projectId: "hackathon-miner",
+            storageBucket: "hackathon-miner.appspot.com",
+            messagingSenderId: "770754233104"
+        };
+
+        this._firebaseApp = firebase.initializeApp(config);
+        this._firebaseAuth = this._firebaseApp.auth();
+        this._firebaseAuth.signInAnonymously();
     }
 
     private spawnTiles(): void {
@@ -229,26 +322,30 @@ export class Level2 extends Phaser.State {
         }
     }
 
-    private createPlayer(): Phaser.Plugin.Isometric.IsoSprite {
+    private createPlayer(uid: string, isoX: number, isoY: number): MinerPlayer {
         // TODO: fix jumping bug when we start on spaceCraftS.
-        var player: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(550, 550, 0, "spaceCraftNE", 0, this._buildingsGroup);
+        var playerSprite: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(isoX, isoY, 0, "spaceCraftNE", 0, this._buildingsGroup);
         //player.loadTexture("spaceCraftS");
 
-        player.anchor.set(0.5);
-        player.scale.setTo(0.5, 0.5);
+        playerSprite.anchor.set(0.5);
+        playerSprite.scale.setTo(0.5, 0.5);
 
-        (<any>this.game).physics.isoArcade.enable(player);
-        player.body.collideWorldBounds = true;
+        (<any>this.game).physics.isoArcade.enable(playerSprite);
+        playerSprite.body.collideWorldBounds = true;
         //player.body.setSize(200, 200, 70, -50, -50);
-        player.body.setSize(250, 250, 70, 0, 0);
+        playerSprite.body.setSize(250, 250, 70, 0, 0);
 
-        var space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+        // var space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
-        space.onDown.add(() => {
-            player.body.velocity.z = 300;
-        }, this);
+        // space.onDown.add(() => {
+        //     playerSprite.body.velocity.z = 300;
+        // }, this);
 
-        return player;
+        return {
+            uid: uid,
+            direction: Direction.S,
+            sprite: playerSprite
+        };
     }
 
     private movePlayer() {
@@ -267,61 +364,79 @@ export class Level2 extends Phaser.State {
             diagonalSpeed = diagonalSpeed * 2;
         }
 
+        var positionChanged = true;
         var newDirection: Direction = undefined;
         if (isUpKeyDown) {
             if (isRightKeyDown) {
                 newDirection = Direction.NE;
-                this._player.body.velocity.x = 0;
-                this._player.body.velocity.y = -diagonalSpeed;
+                this._player.sprite.body.velocity.x = 0;
+                this._player.sprite.body.velocity.y = -diagonalSpeed;
             }
             else if (isLeftKeyDown) {
                 newDirection = Direction.NW;
-                this._player.body.velocity.x = -diagonalSpeed;
-                this._player.body.velocity.y = 0;
+                this._player.sprite.body.velocity.x = -diagonalSpeed;
+                this._player.sprite.body.velocity.y = 0;
             }
             else {
                 newDirection = Direction.N;
-                this._player.body.velocity.x = -speed;
-                this._player.body.velocity.y = -speed;
+                this._player.sprite.body.velocity.x = -speed;
+                this._player.sprite.body.velocity.y = -speed;
             }
         }
         else if (isDownKeyDown) {
             if (isRightKeyDown) {
                 newDirection = Direction.SE;
-                this._player.body.velocity.x = diagonalSpeed;
-                this._player.body.velocity.y = 0;
+                this._player.sprite.body.velocity.x = diagonalSpeed;
+                this._player.sprite.body.velocity.y = 0;
             }
             else if (isLeftKeyDown) {
                 newDirection = Direction.SW;
-                this._player.body.velocity.x = 0;
-                this._player.body.velocity.y = diagonalSpeed;
+                this._player.sprite.body.velocity.x = 0;
+                this._player.sprite.body.velocity.y = diagonalSpeed;
             }
             else {
                 newDirection = Direction.S;
-                this._player.body.velocity.x = speed;
-                this._player.body.velocity.y = speed;
+                this._player.sprite.body.velocity.x = speed;
+                this._player.sprite.body.velocity.y = speed;
             }
         }
         else if (isRightKeyDown) {
             newDirection = Direction.E;
-            this._player.body.velocity.x = speed;
-            this._player.body.velocity.y = -speed;
+            this._player.sprite.body.velocity.x = speed;
+            this._player.sprite.body.velocity.y = -speed;
         }
         else if (isLeftKeyDown) {
             newDirection = Direction.W;
-            this._player.body.velocity.x = -speed;
-            this._player.body.velocity.y = speed;
+            this._player.sprite.body.velocity.x = -speed;
+            this._player.sprite.body.velocity.y = speed;
         }
         else {
-            this._player.body.velocity.x = 0;
-            this._player.body.velocity.y = 0;
+            this._player.sprite.body.velocity.x = 0;
+            this._player.sprite.body.velocity.y = 0;
+            positionChanged = false;
         }
 
         // Load the right direction texture.
-        if (newDirection != undefined && newDirection != null && newDirection != this._playerDirection) {
-            this._player.loadTexture("spaceCraft" + Direction[newDirection].toString());
-            this._playerDirection = newDirection;
+        if (newDirection != undefined && newDirection != null && newDirection != this._player.direction) {
+            this.setDirection(this._player.sprite, newDirection);
+            this._player.direction = newDirection;
         }
+
+        // Update the document in Firebase.
+        if (this._firebasePlayerDocumentRef && positionChanged) {
+            this._firebasePlayerDocumentRef.set({
+                x: this._player.sprite.isoX,
+                y: this._player.sprite.isoY,
+                direction: this._player.direction
+            });
+        }
+    }
+
+    private setPosition(sprite: Phaser.Plugin.Isometric.IsoSprite, isoX: number, isoY: number) {
+        sprite.isoPosition.setTo(isoX, isoY);
+    }
+    private setDirection(sprite: Phaser.Plugin.Isometric.IsoSprite, direction: Direction) {
+        sprite.loadTexture("spaceCraft" + Direction[direction].toString());
     }
 
     private startBuilding(buildingNumber: number) {
