@@ -14,7 +14,7 @@ export class Preloader extends Phaser.State {
     this.game.load.tilemap('level1', '/assets/maps/level1.json', null, Phaser.Tilemap.TILED_JSON);
     this.load.image('desertSprite', '/assets/images/desert.png');
 
-    this.load.image("earth", "assets/images/tiles/earth.png");
+    this.load.image("earth", "assets/images/tiles/earth_paars.png");
     this.load.image("grass", "assets/images/tiles/grass.png");
     this.load.image("grassy", "assets/images/tiles/grassy.png");
     this.load.image("lava", "assets/images/tiles/lava.png");
