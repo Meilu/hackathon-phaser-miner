@@ -142,6 +142,20 @@ export class Level2 extends Phaser.State {
 
         this.movePlayer();
 
+        var debugText = "";
+        this._buildingsGroup.forEach((sprite: Phaser.Plugin.Isometric.IsoSprite) => {
+            if (sprite != this._player)
+                debugText += "Building " + sprite.isoPosition.z + " ";
+        }, this);
+        debugText += "Player " + this._player.isoPosition.z + " ";
+        this._groundGroup.forEach((sprite: Phaser.Plugin.Isometric.IsoSprite) => {
+            if (sprite.isoX == 384 && sprite.isoY == 384) {
+                //if ((<any>sprite).selected) {
+                debugText += "Tile: " + sprite.isoPosition.z + " ";;
+            }
+        }, this);
+        this.game.debug.text(debugText, 20, 20);
+
         // Our collision and sorting code again.
         (<any>this.game).physics.isoArcade.collide(this._groundGroup);
         (<any>this.game).iso.topologicalSort(this._groundGroup);
@@ -217,14 +231,16 @@ export class Level2 extends Phaser.State {
 
     private createPlayer(): Phaser.Plugin.Isometric.IsoSprite {
         // TODO: fix jumping bug when we start on spaceCraftS.
-        var player: Phaser.Plugin.Isometric.IsoSprite = (<any>this.add).isoSprite(550, 550, 0, "spaceCraftNE", 0, this._buildingsGroup);
+        var player: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(550, 550, 0, "spaceCraftNE", 0, this._buildingsGroup);
         //player.loadTexture("spaceCraftS");
 
         player.anchor.set(0.5);
+        player.scale.setTo(0.5, 0.5);
 
         (<any>this.game).physics.isoArcade.enable(player);
         player.body.collideWorldBounds = true;
-        player.body.setSize(200, 200, 70, -50, -50);
+        //player.body.setSize(200, 200, 70, -50, -50);
+        player.body.setSize(250, 250, 70, 0, 0);
 
         var space = this.game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
 
