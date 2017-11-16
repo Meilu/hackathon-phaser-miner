@@ -118,8 +118,13 @@ export class Level2 extends Phaser.State {
             this._firebaseTableRef.on("child_removed", (childSnapshot: any) => {
                 this._otherPlayers.forEach((player: MinerPlayer) => {
                     if (player.uid == childSnapshot.key) {
-                        player.sprite.destroy();
                         this._otherPlayers.splice(this._otherPlayers.indexOf(player), 1);
+
+                        var tween = this.game.add.tween(player.sprite).to({ isoZ: 1000 }, 1000, Phaser.Easing.Exponential.In);
+                        tween.onComplete.add(() => {
+                            player.sprite.destroy();
+                        });
+                        tween.start();
                     }
                 });
             });
@@ -338,7 +343,7 @@ export class Level2 extends Phaser.State {
 
     private createPlayer(uid: string, isoX: number, isoY: number): MinerPlayer {
         // TODO: fix jumping bug when we start on spaceCraftS.
-        var playerSprite: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(isoX, isoY, 0, "spaceCraftNE", 0, this._buildingsGroup);
+        var playerSprite: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(isoX, isoY, 0, "spaceCraftSE", 0, this._buildingsGroup);
         //player.loadTexture("spaceCraftS");
 
         playerSprite.anchor.set(0.5);
