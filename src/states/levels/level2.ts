@@ -90,6 +90,11 @@ export class Level2 extends Phaser.State {
                 direction: this._player.direction
             });
 
+            // Remove the player when he stops playing.
+            window.onunload = ((e: any) => {
+                this._firebasePlayerDocumentRef.remove();
+            });
+
             // Make the camera follow the player.
             this.game.camera.follow(this._player.sprite);
 
@@ -104,8 +109,17 @@ export class Level2 extends Phaser.State {
                             y: childSnapshot.val().y,
                             direction: childSnapshot.val().direction
                         };
-    
+
                         this.handleOtherPlayerDocument(document);
+                    }
+                });
+            });
+
+            this._firebaseTableRef.on("child_removed", (childSnapshot: any) => {
+                this._otherPlayers.forEach((player: MinerPlayer) => {
+                    if (player.uid == childSnapshot.key) {
+                        player.sprite.destroy();
+                        this._otherPlayers.splice(this._otherPlayers.indexOf(player), 1);
                     }
                 });
             });
