@@ -7,6 +7,7 @@ export class MinerPlayerDocument {
     public uid: string;
     public x = 0;
     public y = 0;
+    public z = 0;
     public direction = Direction.S;
 }
 export class MinerPlayer {
@@ -84,11 +85,12 @@ export class Level2 extends Phaser.State {
             this._firebaseTableRef = this._firebaseApp.database().ref('mining-cart');
 
             // Create the player.
-            this._player = this.createPlayer(this._firebaseAuth.currentUser.uid, 550, 550);
+            this._player = this.createPlayer(this._firebaseAuth.currentUser.uid, 550, 550, 0);
 
             this._firebasePlayerDocumentRef.set({
                 x: this._player.sprite.isoX,
                 y: this._player.sprite.isoY,
+                z: this._player.sprite.isoZ,
                 direction: this._player.direction
             });
 
@@ -109,6 +111,7 @@ export class Level2 extends Phaser.State {
                             uid: childSnapshot.key,
                             x: childSnapshot.val().x,
                             y: childSnapshot.val().y,
+                            z: childSnapshot.val().z,
                             direction: childSnapshot.val().direction
                         };
 
@@ -162,7 +165,7 @@ export class Level2 extends Phaser.State {
         });
         // Create a new player if it did not exist yet.
         if (exists == false) {
-            var newOtherPlayer = this.createPlayer(document.uid, document.x, document.y);
+            var newOtherPlayer = this.createPlayer(document.uid, document.x, document.y, document.z);
             newOtherPlayer.sprite.body.moves = false;
             newOtherPlayer.sprite.body.immovable = true;
             this._otherPlayers.push(newOtherPlayer);
@@ -170,7 +173,7 @@ export class Level2 extends Phaser.State {
         // Set the position and direction of the other player.
         this._otherPlayers.forEach((player: MinerPlayer) => {
             if (player.uid == document.uid) {
-                this.setPosition(player.sprite, document.x, document.y);
+                this.setPosition(player.sprite, document.x, document.y, document.z);
                 this.setDirection(player.sprite, document.direction);
             }
         });
@@ -271,9 +274,23 @@ export class Level2 extends Phaser.State {
                 this._player.sprite.body.moves = false;
                 this._player.sprite.body.immovable = true;
                 this.setPosition(this._player.sprite, -10000, -10000);
-                this._player.sprite.destroy();
+                // this._player.sprite.destroy();
+
+                // Remove the player from firebase.
+                //this._firebasePlayerDocumentRef.remove();
             }
         }
+        this._otherPlayers.forEach((player: MinerPlayer) => {
+            if (player.sprite.isoZ < -50) {
+                // Remove the player.
+                player.sprite.body.moves = false;
+                player.sprite.body.immovable = true;
+                this.setPosition(player.sprite, -10000, -10000);
+                // player.sprite.destroy();
+
+                this._otherPlayers.splice(this._otherPlayers.indexOf(player), 1);
+            }
+        });
         (<any>this.game).physics.isoArcade.collide(this._buildingsGroup);
         (<any>this.game).iso.topologicalSort(this._buildingsGroup);
     }
@@ -366,9 +383,9 @@ export class Level2 extends Phaser.State {
         }
     }
 
-    private createPlayer(uid: string, isoX: number, isoY: number): MinerPlayer {
+    private createPlayer(uid: string, isoX: number, isoY: number, isoZ: number): MinerPlayer {
         // TODO: fix jumping bug when we start on spaceCraftS.
-        var playerSprite: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(isoX, isoY, 0, "spaceCraftSE", 0, this._buildingsGroup);
+        var playerSprite: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(isoX, isoY, isoZ, "spaceCraftSE", 0, this._buildingsGroup);
         //player.loadTexture("spaceCraftS");
 
         playerSprite.anchor.set(0.5);
@@ -471,6 +488,7 @@ export class Level2 extends Phaser.State {
             this._firebasePlayerDocumentRef.set({
                 x: this._player.sprite.isoX,
                 y: this._player.sprite.isoY,
+                z: this._player.sprite.isoZ,
                 direction: this._player.direction
             });
         }
@@ -500,8 +518,8 @@ export class Level2 extends Phaser.State {
         this._player.sprite.body.collideWorldBounds = false;
     }
 
-    private setPosition(sprite: Phaser.Plugin.Isometric.IsoSprite, isoX: number, isoY: number) {
-        sprite.isoPosition.setTo(isoX, isoY);
+    private setPosition(sprite: Phaser.Plugin.Isometric.IsoSprite, isoX: number, isoY: number, isoZ?: number) {
+        sprite.isoPosition.setTo(isoX, isoY, isoZ);
     }
     private setDirection(sprite: Phaser.Plugin.Isometric.IsoSprite, direction: Direction) {
         sprite.loadTexture("spaceCraft" + Direction[direction].toString());
