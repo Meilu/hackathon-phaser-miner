@@ -22,6 +22,7 @@ export class Level2 extends Phaser.State {
 
     private _groundGroup: Phaser.Group;
     private _water: Phaser.Plugin.Isometric.IsoSprite[] = [];
+    private _emptyTilePositions: any[] = [];
 
     private _buildingsGroup: Phaser.Group;
 
@@ -338,10 +339,11 @@ export class Level2 extends Phaser.State {
             for (var x = this._tileSize; x <= (<any>this.game).physics.isoArcade.bounds.frontX - this._tileSize; x += this._tileSize) {
                 // Don't draw tiles on empty spots.
                 if (tiles[i] == 7) {
+                    this._emptyTilePositions.push([x, y]);
                     i++;
                     continue;
                 }
-                
+
                 var tile: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(x, y, 0, tileArray[tiles[i]], 0, this._groundGroup);
                 tile.anchor.set(0.5, 0);
                 tile.smoothed = false;
@@ -475,19 +477,8 @@ export class Level2 extends Phaser.State {
     }
 
     private shouldFall() {
-        var emptyTiles = [
-            [832, 192],
-            [896, 192],
-            [768, 256],
-            [832, 256],
-            [896, 256],
-            [768, 320],
-            [832, 320],
-            [896, 320]
-        ];
-
         var shouldFall = false;
-        emptyTiles.forEach((emptyTilePosition: number[]) => {
+        this._emptyTilePositions.forEach((emptyTilePosition: number[]) => {
             if (this._player.sprite.isoX > emptyTilePosition[0] && this._player.sprite.isoX < emptyTilePosition[0] + this._tileSize &&
                 this._player.sprite.isoY > emptyTilePosition[1] && this._player.sprite.isoY < emptyTilePosition[1] + this._tileSize) {
                 shouldFall = true;
