@@ -18,6 +18,8 @@ export class MinerPlayer {
 }
 
 export class Level2 extends Phaser.State {
+  private _nextGameHref = "http://www.google.nl";
+
   private _cursorPosition: Phaser.Plugin.Isometric.Point3;
   private _joystick: any;
   private _cursors: Phaser.CursorKeys;
@@ -27,6 +29,7 @@ export class Level2 extends Phaser.State {
   private _emptyTilePositions: any[] = [];
 
   private _buildingsGroup: Phaser.Group;
+  private _otherPlayersGroups: Phaser.Group[] = [];
 
   private _player: MinerPlayer;
   private _otherPlayers: MinerPlayer[] = [];
@@ -86,7 +89,7 @@ export class Level2 extends Phaser.State {
       this._firebaseTableRef = this._firebaseApp.database().ref('mining-cart');
 
       // Create the player.
-      this._player = this.createPlayer(this._firebaseAuth.currentUser.uid, 550, 550, 0);
+      this._player = this.createPlayer(this._firebaseAuth.currentUser.uid, 550, 550, 0, false);
 
       this._firebasePlayerDocumentRef.set({
         x: this._player.sprite.isoX,
@@ -170,7 +173,7 @@ export class Level2 extends Phaser.State {
 
     // Create a new player if it did not exist yet.
     if (exists == false) {
-      var newOtherPlayer = this.createPlayer(document.uid, document.x, document.y, document.z);
+      var newOtherPlayer = this.createPlayer(document.uid, document.x, document.y, document.z, true);
       newOtherPlayer.sprite.body.moves = false;
       newOtherPlayer.sprite.body.immovable = true;
       this._otherPlayers.push(newOtherPlayer);
@@ -255,27 +258,6 @@ export class Level2 extends Phaser.State {
     if (this._player)
       this.movePlayer();
 
-    /* DEBUG */
-    var debugText = "";
-    this._buildingsGroup.forEach((sprite: Phaser.Plugin.Isometric.IsoSprite) => {
-      if (this._player && sprite != this._player.sprite)
-        debugText += "Building " + sprite.isoPosition.z + " ";
-    }, this);
-    if (this._player)
-      debugText += "Player " + this._player.sprite.isoPosition.z + " ";
-    this._groundGroup.forEach((sprite: Phaser.Plugin.Isometric.IsoSprite) => {
-      if (sprite.isoX == 384 && sprite.isoY == 384) {
-        //if ((<any>sprite).selected) {
-        debugText += "Tile: " + sprite.isoPosition.z + " ";;
-      }
-    }, this);
-    this.game.debug.text(debugText, 20, 20);
-    /* DEBUG */
-
-    // Our collision and sorting code again.
-    (<any>this.game).physics.isoArcade.collide(this._groundGroup);
-    (<any>this.game).iso.topologicalSort(this._groundGroup);
-
     if (this._player) {
       if (this.shouldFall()) {
         this.fallDown();
@@ -292,8 +274,10 @@ export class Level2 extends Phaser.State {
 
         this._firebasePlayerDocumentRef.set({ hasFallenDown: true });
 
-        // Remove the player from firebase.
-        //this._firebasePlayerDocumentRef.remove();
+        this.camera.fade(0x000000);
+        this.camera.onFadeComplete.add(() => {
+          window.location.href = this._nextGameHref;
+        }, this);
       }
     }
     this._otherPlayers.forEach((player: MinerPlayer) => {
@@ -307,6 +291,15 @@ export class Level2 extends Phaser.State {
         this._otherPlayers.splice(this._otherPlayers.indexOf(player), 1);
       }
     });
+
+    // Our collision and sorting code again.
+    (<any>this.game).physics.isoArcade.collide(this._groundGroup);
+    (<any>this.game).iso.topologicalSort(this._groundGroup);
+
+    this._otherPlayersGroups.forEach((group: any) => {
+      (<any>this.game).iso.topologicalSort(group);
+    });
+
     (<any>this.game).physics.isoArcade.collide(this._buildingsGroup);
     (<any>this.game).iso.topologicalSort(this._buildingsGroup);
   }
@@ -399,9 +392,14 @@ export class Level2 extends Phaser.State {
     }
   }
 
-  private createPlayer(uid: string, isoX: number, isoY: number, isoZ: number): MinerPlayer {
+  private createPlayer(uid: string, isoX: number, isoY: number, isoZ: number, isOtherPlayer: boolean): MinerPlayer {
+    var newGroup;
+    if (isOtherPlayer) {
+      newGroup = this.add.group();
+      this._otherPlayersGroups.push(newGroup);
+    }
     // TODO: fix jumping bug when we start on spaceCraftS.
-    var playerSprite: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(isoX, isoY, isoZ, "spaceCraftSE", 0, this._buildingsGroup);
+    var playerSprite: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(isoX, isoY, isoZ, "spaceCraftSE", 0, !isOtherPlayer ? this._buildingsGroup : newGroup);
     //player.loadTexture("spaceCraftS");
 
     playerSprite.anchor.set(0.5);
