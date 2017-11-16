@@ -31,6 +31,7 @@ export class Level2 extends Phaser.State {
     private _isBuilding = false;
     private _buildingSprite: Phaser.Plugin.Isometric.IsoSprite;
     private _selectedTile: Phaser.Plugin.Isometric.IsoSprite;
+    private _isFallingDown = false;
 
     private _worldSize = 1;
     private _tileSize = 64;
@@ -149,7 +150,7 @@ export class Level2 extends Phaser.State {
         this.startBuilding(2);
         this.build(256, 768);
         this.startBuilding(4);
-        this.build(640, 192);
+        this.build(490, 192);
     }
 
     private handleOtherPlayerDocument(document: MinerPlayerDocument) {
@@ -257,6 +258,21 @@ export class Level2 extends Phaser.State {
         (<any>this.game).physics.isoArcade.collide(this._groundGroup);
         (<any>this.game).iso.topologicalSort(this._groundGroup);
 
+        if (this._player) {
+            if (this.shouldFall()) {
+                this.fallDown();
+            }
+            if (this._isFallingDown && this._player.sprite.isoZ < -130) {
+                // Stop following the player.
+                this.game.camera.unfollow();
+
+                // Remove the player.
+                this._player.sprite.body.moves = false;
+                this._player.sprite.body.immovable = true;
+                this.setPosition(this._player.sprite, -10000, -10000);
+                this._player.sprite.destroy();
+            }
+        }
         (<any>this.game).physics.isoArcade.collide(this._buildingsGroup);
         (<any>this.game).iso.topologicalSort(this._buildingsGroup);
     }
@@ -297,14 +313,15 @@ export class Level2 extends Phaser.State {
         tileArray[4] = 'earth';
         tileArray[5] = 'stone';
         tileArray[6] = 'lava';
+        tileArray[7] = 'empty';
 
         var tiles = [
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-            3, 3, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4,
-            3, 3, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4,
-            3, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 4, 4,
-            3, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 4, 4,
-            3, 3, 3, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+            3, 3, 0, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4,
+            3, 3, 0, 0, 0, 3, 3, 3, 3, 3, 3, 4, 7, 7, 4,
+            3, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 7, 7, 7, 4,
+            3, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 7, 7, 7, 4,
+            3, 3, 3, 0, 0, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4,
             3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
             1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
             1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -319,6 +336,12 @@ export class Level2 extends Phaser.State {
         var i = 0;
         for (var y = this._tileSize; y <= (<any>this.game).physics.isoArcade.bounds.frontY - this._tileSize; y += this._tileSize) {
             for (var x = this._tileSize; x <= (<any>this.game).physics.isoArcade.bounds.frontX - this._tileSize; x += this._tileSize) {
+                // Don't draw tiles on empty spots.
+                if (tiles[i] == 7) {
+                    i++;
+                    continue;
+                }
+                
                 var tile: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(x, y, 0, tileArray[tiles[i]], 0, this._groundGroup);
                 tile.anchor.set(0.5, 0);
                 tile.smoothed = false;
@@ -449,6 +472,41 @@ export class Level2 extends Phaser.State {
                 direction: this._player.direction
             });
         }
+    }
+
+    private shouldFall() {
+        var emptyTiles = [
+            [832, 192],
+            [896, 192],
+            [768, 256],
+            [832, 256],
+            [896, 256],
+            [768, 320],
+            [832, 320],
+            [896, 320]
+        ];
+
+        var shouldFall = false;
+        emptyTiles.forEach((emptyTilePosition: number[]) => {
+            if (this._player.sprite.isoX > emptyTilePosition[0] && this._player.sprite.isoX < emptyTilePosition[0] + this._tileSize &&
+                this._player.sprite.isoY > emptyTilePosition[1] && this._player.sprite.isoY < emptyTilePosition[1] + this._tileSize) {
+                shouldFall = true;
+            }
+        });
+
+        return shouldFall;
+    }
+    private fallDown() {
+        if (this._isFallingDown)
+            return;
+
+        this._isFallingDown = true;
+
+        this._buildingsGroup.remove(this._player.sprite);
+        this._groundGroup.add(this._player.sprite);
+
+        this._player.sprite.body.setSize(100, 100, 70, 0, 0);
+        this._player.sprite.body.collideWorldBounds = false;
     }
 
     private setPosition(sprite: Phaser.Plugin.Isometric.IsoSprite, isoX: number, isoY: number) {
