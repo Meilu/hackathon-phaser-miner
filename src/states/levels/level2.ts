@@ -544,7 +544,10 @@ export class Level2 extends Phaser.State {
     sprite.isoPosition.setTo(isoX, isoY, isoZ);
   }
   private setDirection(sprite: Phaser.Plugin.Isometric.IsoSprite, direction: Direction) {
-    sprite.loadTexture("spaceCraft" + Direction[direction].toString());
+    try {
+      sprite.loadTexture("spaceCraft" + Direction[direction].toString());
+    }
+    catch (e) {}
   }
 
   private startBuilding(buildingNumber: number) {
