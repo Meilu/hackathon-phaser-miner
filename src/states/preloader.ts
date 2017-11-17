@@ -7,10 +7,10 @@ export class Preloader extends Phaser.State {
 
   preload() {
     // Add the preloadbar sprite.
-    this.preloadBar = this.add.sprite(this.game.world.centerX, this.game.world.centerY - 225, 'logo');
+    this.preloadBar = this.add.sprite(this.game.world.centerX - 420, this.game.world.centerY - 225, 'preloadBar');
     // this.progress = this.game.add.text(this.game.world.centerX + 345, this.game.world.centerY + 270, '0%', { fill: 'white' });
     // this.progress.anchor.setTo(.5, .5);
-    var appicon = this.add.sprite(this.game.world.centerX - 425, this.game.world.centerY - 225, 'appicon');
+    // var appicon = this.add.sprite(this.game.world.centerX - 425, this.game.world.centerY - 225, 'appicon');
 
 
     this.game.load.onFileComplete.add(((progress: any, cacheKey: any, success: any, totalLoaded: any, totalFiles: any) => {
@@ -19,8 +19,6 @@ export class Preloader extends Phaser.State {
         var music = this.game.add.audio('graven');
 
         music.play();
-        appicon.inputEnabled = true;
-        this.preloadBar.inputEnabled = true;
 
         //appicon.events.onInputDown.add(this.goTolvl2, this);
         //this.preloadBar.events.onInputDown.add(this.goTolvl2, this);
