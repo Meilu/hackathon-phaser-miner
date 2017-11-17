@@ -28,92 +28,92 @@
 				'color3',
 				'color4',
 			];
-		
-			function rand(min, max){
+
+			function rand(min, max) {
 				return Math.round(Math.random() * (max - min) + min);
 			};
-			
-			function renderGrid(tableNode){
+
+			function renderGrid(tableNode) {
 				var ref = firebase.database().ref('object');
-				
+
 				//init
-				ref.once('value', function(snapshot){
-					
-					$('td', tableNode).removeClass('gold silver mined iron player');					
-					
-					var i=0;
-					snapshot.forEach(function(childSnapshot){
-					
+				ref.once('value', function (snapshot) {
+
+					$('td', tableNode).removeClass('gold silver mined iron player');
+
+					var i = 0;
+					snapshot.forEach(function (childSnapshot) {
+
 						var key = childSnapshot.key;
 						var data = childSnapshot.val();
-						var cls  = [data.t];
-						var node = $('tr:eq('+data.y+') td:eq('+data.x+')', tableNode);
-						if(data.t === 'player'){
-						
-							node.append('<span class="tooltip" id="tooltip-'+key+'">'+ data.name +'</span>');
-						
+						var cls = [data.t];
+						var node = $('tr:eq(' + data.y + ') td:eq(' + data.x + ')', tableNode);
+						if (data.t === 'player') {
+
+							node.append('<span class="tooltip" id="tooltip-' + key + '">' + data.name + '</span>');
+
 							//not a bot
-							if(/^[A-za-z\d]{28}$/.test(key)){
-								$('.tooltip', node).addClass(tooltipColors[rand(0, tooltipColors.length-1)]);
+							if (/^[A-za-z\d]{28}$/.test(key)) {
+								$('.tooltip', node).addClass(tooltipColors[rand(0, tooltipColors.length - 1)]);
 							}
 							cls.push(key);
-							
-							
+
+
 							node.removeClass(key + ' gold silver iron player');
 						}
 						node.addClass(cls.join(' '));
-						
+
 						i++;
 					});
 					$("#loader").fadeOut();
 				});
-				
+
 				//new
-				ref.on('child_added', function(snapshot){
-					
+				ref.on('child_added', function (snapshot) {
+
 					var key = snapshot.key;
 					var data = snapshot.val();
-					var cls  = [data.t];
-					$('tr:eq('+data.y+') td:eq('+data.x+')', tableNode).addClass(cls.join(' ')); 
-					
+					var cls = [data.t];
+					$('tr:eq(' + data.y + ') td:eq(' + data.x + ')', tableNode).addClass(cls.join(' '));
+
 				});
 				//change
-				ref.on('child_changed', function(snapshot){
-					
+				ref.on('child_changed', function (snapshot) {
+
 					var key = snapshot.key;
 					var data = snapshot.val();
 					var node = $('.' + key, tableNode);
-					var cls  = [data.t];
-					if(data.t === 'player'){
-					
-						$("#tooltip-"+key).remove();
+					var cls = [data.t];
+					if (data.t === 'player') {
+
+						$("#tooltip-" + key).remove();
 						cls.push(key);
-						node.append('<span class="tooltip" id="tooltip-'+key+'">'+ data.name +'</span>');
-						
+						node.append('<span class="tooltip" id="tooltip-' + key + '">' + data.name + '</span>');
+
 						//not a bot
-						if(/^[A-za-z\d]{28}$/.test(key)){
-							$('.tooltip', node).addClass(tooltipColors[rand(0, tooltipColors.length-1)]);
+						if (/^[A-za-z\d]{28}$/.test(key)) {
+							$('.tooltip', node).addClass(tooltipColors[rand(0, tooltipColors.length - 1)]);
 						}
-					
-						
+
+
 						node.removeClass(key + ' gold silver iron player');
 					}
 
-					$('tr:eq('+data.y+') td:eq('+data.x+')', tableNode).addClass(cls.join(' ')); 
+					$('tr:eq(' + data.y + ') td:eq(' + data.x + ')', tableNode).addClass(cls.join(' '));
 				});
 			};
-			
-			function renderLeaderBoard(leaderNode){
+
+			function renderLeaderBoard(leaderNode) {
 				var ref = firebase.database().ref('object');
-				ref.orderByChild('t').equalTo('player').on('value', function(snapshot){
+				ref.orderByChild('t').equalTo('player').on('value', function (snapshot) {
 
 					var players = [];
-				
-					snapshot.forEach(function(childSnapshot){	
+
+					snapshot.forEach(function (childSnapshot) {
 						var key = childSnapshot.key;
 						var data = childSnapshot.val();
-						
-						if('player' === data.t){
+
+						if ('player' === data.t) {
 							players.push({
 								key: childSnapshot.key,
 								name: data.name,
@@ -121,124 +121,128 @@
 							});
 						}
 					});
-					
+
 					//
 					leaderNode.empty();
-					
-					players.sort(function compare(a, b){
+
+					players.sort(function compare(a, b) {
 						return a.points < b.points ? 1 : (a.points > b.points ? -1 : 0);
-					}).forEach(function(player){
-					
-						var cls = $('#tooltip-'+ player.key).attr('class');
-						var match = String(cls||'').match(/\b(color\d+)\b/) || [];
+					}).forEach(function (player) {
+
+						var cls = $('#tooltip-' + player.key).attr('class');
+						var match = String(cls || '').match(/\b(color\d+)\b/) || [];
 						var color = !!match.length ? match[0] : '';
-						leaderNode.append('<tr><td class="'+ color +'">'+ player.name + '</td><td>' + player.points + '</td></tr>');
-					});	
+						leaderNode.append('<tr><td class="' + color + '">' + player.name + '</td><td>' + player.points + '</td></tr>');
+					});
 				});
 				//var noticeNode = $('div#notice');
-				
+
 				//ref.orderByChild('t').equalTo('player').on('child_changed', function(snapshot){});
 			}
 
-			
+
 			var width = 100;
 			var height = 100;
 			var spawnItems = ['gold', 'silver', 'iron'];
-			
-			var app = firebase.initializeApp({
+
+			var config = {
 				apiKey: "AIzaSyDFKJUDnviW3iW58h_wycvSET9AW4GeguA",
 				authDomain: "h4ck4t0n.firebaseapp.com",
 				databaseURL: "https://h4ck4t0n.firebaseio.com",
 				projectId: "h4ck4t0n",
 				storageBucket: "h4ck4t0n.appspot.com",
 				messagingSenderId: "632628456772"
-			});
+			};
+
+			var app = firebase.app.length ? firebase.initializeApp(config) : firebase.app();
 			var auth = app.auth();
-		
-			$(function(){
-			
+
+			$(function () {
+
 				var tableNode = $('table#grid');
-				
-				tableNode.find('.player').each(function(){
+
+				tableNode.find('.player').each(function () {
 					console.log(this);
 				});
-			
+
 				//$(window).on('resize', function(){
 				//	tableNode.width(tableNode.height());
 				//}).trigger('resize');
-				
-				var leaderNode = $('div#leaderboard-container > table tbody');
-			
-				auth.signInAnonymously();  
 
-				auth.onAuthStateChanged(function(user){
-					if(!!user){
+				var leaderNode = $('div#leaderboard-container > table tbody');
+
+				auth.signInAnonymously();
+
+				auth.onAuthStateChanged(function (user) {
+					if (!!user) {
 						renderGrid(tableNode);
 						renderLeaderBoard(leaderNode);
 					}
-					else{
+					else {
 						throw Error('Not logged in!');
 					}
 				});
-			
+
 				var x, y;
-				for(y=0; y<height; y++){
-				
+				for (y = 0; y < height; y++) {
+
 					var row = $('<tr />');
-					for(x=0; x<width; x++){
+					for (x = 0; x < width; x++) {
 						row.append('<td></td>');
 					}
 					tableNode.append(row);
 				}
-				
+
 				//if(null === auth.currentUser){
 				//	throw new Error('Not logged in!');
 				//}
-				
-				$('img#bomba-logo').on('click', function(e){
+
+				$('img#bomba-logo').on('click', function (e) {
 					e.stopPropagation();
 					e.preventDefault();
-					
+
 					//console.log('Spawn!');
-					
+
 					var i, x, y;
 					var ref = firebase.database().ref('object');
-					
+
 					ref.remove();
 
-					for(i=0; i<rand(1500, 3750); i++){
+					for (i = 0; i < rand(1500, 3750); i++) {
 
 						ref.push({
-							t: spawnItems[rand(0, spawnItems.length-1)],
-							x: rand(0, width-1),
-							y: rand(0, height-1)				
+							t: spawnItems[rand(0, spawnItems.length - 1)],
+							x: rand(0, width - 1),
+							y: rand(0, height - 1)
 						});
 					}
 				});
 
 			});
-			 
-	    })(jQuery);
-		</script>
-		<style>	
-		html, 
-		body{
+
+		})(jQuery);
+	</script>
+	<style>
+		html,
+		body {
 			height: 100%;
 			width: 100%;
 			overflow: hidden;
 			background-color: #000000;
 		}
-		body{
+
+		body {
 			position: relative;
 			margin: 0;
 			padding: 0;
-						
+
 			background-image: url(img/bg.jpg);
 			background-position: center;
 			background-repeat: no-repeat;
 			background-size: cover;
 		}
-		body::after{
+
+		body::after {
 			content: "";
 			background-image: url(img/gloryhole.png);
 			background-position: top center;
@@ -248,57 +252,66 @@
 			height: 100%;
 			position: absolute;
 		}
-		div#grid-container{
+
+		div#grid-container {
 			position: absolute;
 			top: 75px;
 			left: 0;
 			right: 0;
-			height: 100%;	
+			height: 100%;
 			windth: 100%;
 		}
-		table#grid{
+
+		table#grid {
 			position: relative;
 			border-collapse: collapse;
 			margin: auto;
 			height: 100%;
 			width: 100%;
 		}
-		table#grid td.gold{
+
+		table#grid td.gold {
 			background-image: url(img/gold.png);
 			background-position: center;
 			background-repeat: no-repeat;
 			background-size: cover;
 		}
-		table#grid td.silver{
+
+		table#grid td.silver {
 			background-image: url(img/silver.png);
 			background-position: center;
 			background-repeat: no-repeat;
 			background-size: cover;
 		}
-		table#grid td.iron{
+
+		table#grid td.iron {
 			background-image: url(img/iron.png);
 			background-position: center;
 			background-repeat: no-repeat;
 			background-size: cover;
 		}
-		table#grid td.mined{
-			background-color: rgba(0,0,0,0.5) !important;
+
+		table#grid td.mined {
+			background-color: rgba(0, 0, 0, 0.5) !important;
 		}
-		table#grid td.player{
+
+		table#grid td.player {
 			background-image: url(img/miner.png);
 			background-position: center;
 			background-repeat: no-repeat;
 			background-size: cover;
 			position: relative;
 		}
-		table#grid td.bomb{
+
+		table#grid td.bomb {
 			background-color: #789;
 		}
-		div#leaderboard-container{
+
+		div#leaderboard-container {
 			max-height: 95%;
 			overflow: hidden;
 			position: absolute;
-			bottom: 10px; 
+			bottom: 10px;
 			right: 10px;
 			height: auto;
 			width: 250px;
@@ -310,71 +323,78 @@
 			border-radius: 7.5px;
 			padding: 5px;
 			color: #fff;
-			
+
 			background-image: url(img/ranking-bg.png);
 			background-position: top;
 			background-repeat: repeat-x;
 			background-color: #6f54c6;
-			
+
 			font-family: 'Arial', serif;
 			-webkit-font-smoothing: antialiased;
 			font-size: 26px;
 		}
-		div#leaderboard-container > table{
+
+		div#leaderboard-container>table {
 			height: 100%;
 			width: 100%;
 			border-collapse: collapse;
 		}
-		div#leaderboard-container > table th{
+
+		div#leaderboard-container>table th {
 			text-align: left;
 		}
-		div#leaderboard-container > table tr{
+
+		div#leaderboard-container>table tr {
 			font-size: 20px;
 			line-height: 26px;
 			font-family: 'Arial', serif;
 		}
-		button#spawn{
+
+		button#spawn {
 			display: none;
 		}
-		div#notice{
-			width: 200px; 
-			height: 100px; 
-			z-index: 1000; 
-			top: 150px; 
+
+		div#notice {
+			width: 200px;
+			height: 100px;
+			z-index: 1000;
+			top: 150px;
 			left: 50%;
-			position: absolute; 
+			position: absolute;
 			display: none;
 		}
-		div#notice > div{
-			position: relative; 
+
+		div#notice>div {
+			position: relative;
 			margin-left: -200px;
 			border-radius: 7.5px;
 			background-color: white;
-			font-size: 20px; 
-			font-family: 'Arial', serif;		
-			-webkit-font-smoothing: antialiased;	
+			font-size: 20px;
+			font-family: 'Arial', serif;
+			-webkit-font-smoothing: antialiased;
 			padding: 5px;
 			text-align: center;
 		}
-		span.tooltip{
-			z-index: 101; 
-			position: absolute; 
-			background: white; 
-			border-radius: 3.5px; 
-			font-weight: bold; 
+
+		span.tooltip {
+			z-index: 101;
+			position: absolute;
+			background: white;
+			border-radius: 3.5px;
+			font-weight: bold;
 			padding: 1.75px;
 			/*top: -15px;
 			left: 5px;*/
 			font-family: 'Arial', serif;
 			-webkit-font-smoothing: antialiased;
-			font-size: 16px; 
+			font-size: 16px;
 		}
-		
+
 		span.tooltip.color0::before,
 		span.tooltip.color1::before,
 		span.tooltip.color2::before,
 		span.tooltip.color3::before,
-		span.tooltip.color4::before{
+		span.tooltip.color4::before {
 			content: "";
 			background-image: url(img/miner.png);
 			background-position: center;
@@ -385,77 +405,104 @@
 			position: absolute;
 			top: -80px;
 		}
-		
-		#leaderboard .color0{
+
+		#leaderboard .color0 {
 			color: #bae1ff !important;
 		}
-		#grid .color0{
+
+		#grid .color0 {
 			background-color: #bae1ff !important;
 		}
-		#leaderboard .color1{
+
+		#leaderboard .color1 {
 			color: #ffb3ba !important;
 		}
-		#grid .color1{
-			background-color: #ffb3ba !important;		
+
+		#grid .color1 {
+			background-color: #ffb3ba !important;
 		}
-		#leaderboard .color2{
+
+		#leaderboard .color2 {
 			color: #ffdfba !important;
 		}
-		#grid .color2{
+
+		#grid .color2 {
 			background-color: #ffdfba !important;
 		}
-		#leaderboard .color3{
+
+		#leaderboard .color3 {
 			color: #ffffba !important;
 		}
-		#grid .color3{		
+
+		#grid .color3 {
 			background-color: #ffffba !important;
 		}
-		#leaderboard .color4{
+
+		#leaderboard .color4 {
 			color: #baffc9 !important;
 		}
-		#grid .color4{
+
+		#grid .color4 {
 			background-color: #baffc9 !important;
 		}
 
 		.loader {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    
-    height: 120px;
-    margin:-60px 0 0 -60px;
-    -webkit-animation:spin 1s linear infinite;
-    -moz-animation:spin 1s linear infinite;
-    animation:spin 1s linear infinite;
-}
-@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
-@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
-@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
-		</style>
-	</head>
-	<body>
-		<div style="position: absolute; width: 100%; height: 100%; background-color: black; z-index: 2000;" id="loader">
-			<img src="img/miner.png" class="loader"/>
+			position: absolute;
+			top: 50%;
+			left: 50%;
 
-		</div>
-		<div id="notice">
-			<div></div>
-		</div>
-		<div id="leaderboard-container">
-			<img id="bomba-logo" src="img/bomba-logo.png" style="width: 250px;" />
-			<table id="leaderboard">
-				<thead>
-					<tr>
-						<th width="auto">Player</th>
-						<th width="10">Points</th>
-					</tr>
-				</thead>
-				<tbody>
-				</tbody>
-			</table>
-		</div>
-		<div id="grid-container">
-			<table id="grid"></table>
-		</div>
-	</body>
-</html> 
+			height: 120px;
+			margin: -60px 0 0 -60px;
+			-webkit-animation: spin 1s linear infinite;
+			-moz-animation: spin 1s linear infinite;
+			animation: spin 1s linear infinite;
+		}
+
+		@-moz-keyframes spin {
+			100% {
+				-moz-transform: rotate(360deg);
+			}
+		}
+
+		@-webkit-keyframes spin {
+			100% {
+				-webkit-transform: rotate(360deg);
+			}
+		}
+
+		@keyframes spin {
+			100% {
+				-webkit-transform: rotate(360deg);
+				transform: rotate(360deg);
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div style="position: absolute; width: 100%; height: 100%; background-color: black; z-index: 2000;" id="loader">
+		<img src="img/miner.png" class="loader" />
+
+	</div>
+	<div id="notice">
+		<div></div>
+	</div>
+	<div id="leaderboard-container">
+		<img id="bomba-logo" src="img/bomba-logo.png" style="width: 250px;" />
+		<table id="leaderboard">
+			<thead>
+				<tr>
+					<th width="auto">Player</th>
+					<th width="10">Points</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+	<div id="grid-container">
+		<table id="grid"></table>
+	</div>
+</body>
+
+</html>
