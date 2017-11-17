@@ -28,8 +28,10 @@ export class Level2 extends Phaser.State {
   private _groundGroup: Phaser.Group;
   private _water: Phaser.Plugin.Isometric.IsoSprite[] = [];
   private _emptyTilePositions: any[] = [];
+  private _startTilePositions: any[] = [];
 
   private _buildingsGroup: Phaser.Group;
+  private _addedBuildings: Phaser.Plugin.Isometric.IsoSprite[] = [];
   private _otherPlayersGroups: Phaser.Group[] = [];
 
   private _player: MinerPlayer;
@@ -89,8 +91,9 @@ export class Level2 extends Phaser.State {
       this._firebasePlayerDocumentRef = this._firebaseApp.database().ref('mining-cart/' + this._firebaseAuth.currentUser.uid);
       this._firebaseTableRef = this._firebaseApp.database().ref('mining-cart');
 
+      var startPosition = this.calculateStartPosition();
       // Create the player.
-      this._player = this.createPlayer(this._firebaseAuth.currentUser.uid, 550, 550, 0, false);
+      this._player = this.createPlayer(this._firebaseAuth.currentUser.uid, startPosition[0], startPosition[1], 0, false);
 
       this._firebasePlayerDocumentRef.set({
         x: this._player.sprite.isoX,
@@ -157,9 +160,9 @@ export class Level2 extends Phaser.State {
     this._cursorPosition = new Phaser.Plugin.Isometric.Point3();
 
     // Start the map with two buildings.
-    this.startBuilding(2);
+    this.startBuilding(2, false);
     this.build(256, 768);
-    this.startBuilding(4);
+    this.startBuilding(4, false);
     this.build(490, 192);
   }
 
@@ -222,6 +225,17 @@ export class Level2 extends Phaser.State {
         this.startBuilding(7);
     }
 
+    if (this.game.input.keyboard.isDown(Phaser.Keyboard.DELETE)) {
+      this._addedBuildings.forEach((buildingSprite: Phaser.Plugin.Isometric.IsoSprite) => {
+        buildingSprite.destroy();
+      });
+
+      // Remove otherplayers from firebase.
+      this._otherPlayers.forEach((otherPlayer: MinerPlayer) => {
+        this._firebaseApp.database().ref('mining-cart/' + otherPlayer.uid).remove();
+      });
+    }
+
     if (this._player)
       this.movePlayer();
 
@@ -253,7 +267,7 @@ export class Level2 extends Phaser.State {
         player.sprite.body.moves = false;
         player.sprite.body.immovable = true;
         this.setPosition(player.sprite, -10000, -10000);
-        // player.sprite.destroy();
+        player.sprite.destroy();
 
         this._otherPlayers.splice(this._otherPlayers.indexOf(player), 1);
       }
@@ -346,7 +360,7 @@ export class Level2 extends Phaser.State {
     tileArray[3] = 'grassy';
     tileArray[4] = 'earth';
     tileArray[5] = 'stone';
-    tileArray[6] = 'lava';
+    tileArray[6] = 'grassy';
     tileArray[7] = 'empty';
 
     var tiles = [
@@ -356,10 +370,10 @@ export class Level2 extends Phaser.State {
       3, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 7, 7, 7, 4,
       3, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 7, 7, 7, 4,
       3, 3, 3, 0, 0, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4,
-      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-      1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-      1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-      1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+      3, 3, 3, 3, 3, 3, 6, 6, 6, 6, 3, 3, 3, 3, 3,
+      1, 3, 3, 3, 3, 3, 6, 6, 6, 6, 3, 3, 3, 3, 3,
+      1, 3, 3, 3, 3, 3, 6, 6, 6, 6, 3, 3, 3, 3, 3,
+      1, 1, 1, 3, 3, 3, 6, 6, 6, 6, 3, 3, 3, 3, 3,
       1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
       1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
       1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -375,6 +389,10 @@ export class Level2 extends Phaser.State {
           this._emptyTilePositions.push([x, y]);
           i++;
           continue;
+        }
+        // Save the start tile positions.
+        if (tiles[i] == 6) {
+          this._startTilePositions.push([x, y]);
         }
 
         var tile: Phaser.Plugin.Isometric.IsoSprite = (<any>this.game).add.isoSprite(x, y, 0, tileArray[tiles[i]], 0, this._groundGroup);
@@ -397,6 +415,14 @@ export class Level2 extends Phaser.State {
         i++;
       }
     }
+  }
+
+  private calculateStartPosition() {
+    if (!this._startTilePositions || this._startTilePositions.length == 0)
+      return [550, 550];
+
+    // Return a random startTile position.
+    return this._startTilePositions[Math.floor(Math.random() * this._startTilePositions.length)];
   }
 
   private createPlayer(uid: string, isoX: number, isoY: number, isoZ: number, isOtherPlayer: boolean): MinerPlayer {
@@ -547,16 +573,19 @@ export class Level2 extends Phaser.State {
     try {
       sprite.loadTexture("spaceCraft" + Direction[direction].toString());
     }
-    catch (e) {}
+    catch (e) { }
   }
 
-  private startBuilding(buildingNumber: number) {
+  private startBuilding(buildingNumber: number, isAdded: boolean = true) {
     if (this._isBuilding)
       this.stopBuilding();
 
     this._buildingSprite = (<any>this.game).add.isoSprite(0, 0, 0, 'building' + buildingNumber, 0, this._buildingsGroup);
     this._buildingSprite.tint = 0x86bfda;
     this._buildingSprite.anchor.set(0.5, 0.5);
+
+    if (isAdded)
+      this._addedBuildings.push(this._buildingSprite);
 
     // Enable the physics body on this sprite.
     (<any>this.game).physics.isoArcade.enable(this._buildingSprite);
