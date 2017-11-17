@@ -3,7 +3,7 @@ import * as Phaser from 'phaser';
 export class Boot extends Phaser.State {
   preload() {
     // Preload anything related to the preloader image.
-    this.load.image('preloadBar', 'assets/images/loader.png');
+    this.load.image('preloadBar', 'assets/images/preloader.png');
     this.load.image('appicon', 'assets/images/app-icon.png');
     this.load.image('logo', 'assets/images/logo.png');
   }
