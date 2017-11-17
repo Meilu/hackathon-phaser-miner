@@ -1,5 +1,5 @@
 {
-    "name": "Bomber Miner",
+    "name": "Bomba Miner",
     "icons": [
       {
         "src": "/src/map/img/icon.png",
@@ -38,7 +38,7 @@
         "density": 4.0
       }
     ],
-    "start_url": "",
+    "start_url": "/",
     "display": "standalone",
     "orientation": "landscape"
   }
