@@ -22,8 +22,8 @@ export class Preloader extends Phaser.State {
         appicon.inputEnabled = true;
         this.preloadBar.inputEnabled = true;
 
-        appicon.events.onInputDown.add(this.goTolvl2, this);
-        this.preloadBar.events.onInputDown.add(this.goTolvl2, this);
+        //appicon.events.onInputDown.add(this.goTolvl2, this);
+        //this.preloadBar.events.onInputDown.add(this.goTolvl2, this);
 
         setTimeout(() => { this.game.state.start('Level2', true, false); }, 3000);
       }

@@ -285,15 +285,15 @@ export class Level2 extends Phaser.State {
 
   private setupFirebase() {
     var config = {
-      apiKey: "AIzaSyDFKJUDnviW3iW58h_wycvSET9AW4GeguA",
-      authDomain: "h4ck4t0n.firebaseapp.com",
-      databaseURL: "https://h4ck4t0n.firebaseio.com",
-      projectId: "h4ck4t0n",
-      storageBucket: "h4ck4t0n.appspot.com",
-      messagingSenderId: "632628456772"
+      apiKey: "AIzaSyBqaEksBFhZbwG4X5J5kfYXSnePM8YkRVk",
+      authDomain: "hackathon-miner.firebaseapp.com",
+      databaseURL: "https://hackathon-miner.firebaseio.com",
+      projectId: "hackathon-miner",
+      storageBucket: "hackathon-miner.appspot.com",
+      messagingSenderId: "770754233104"
     };
 
-    this._firebaseApp = firebase.app.length ? firebase.initializeApp(config) : firebase.app();
+    this._firebaseApp = firebase.initializeApp(config);
     this._firebaseAuth = this._firebaseApp.auth();
     this._firebaseAuth.signInAnonymously();
   }
