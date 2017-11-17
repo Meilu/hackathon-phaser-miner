@@ -15,10 +15,11 @@ export class MinerPlayer {
   public uid: string;
   public direction = Direction.S;
   public sprite: Phaser.Plugin.Isometric.IsoSprite;
+  public updatePosition = false;
 }
 
 export class Level2 extends Phaser.State {
-  private _nextGameHref = "http://www.google.nl";
+  private _nextGameHref = "src/map/map.html";
 
   private _cursorPosition: Phaser.Plugin.Isometric.Point3;
   private _joystick: any;
@@ -162,40 +163,6 @@ export class Level2 extends Phaser.State {
     this.build(490, 192);
   }
 
-  private handleOtherPlayerDocument(document: MinerPlayerDocument) {
-    var exists = false;
-
-    // Check if the player exists already, if not create it.
-    this._otherPlayers.forEach((player: MinerPlayer) => {
-      if (player.uid == document.uid)
-        exists = true;
-    });
-
-    // Create a new player if it did not exist yet.
-    if (exists == false) {
-      var newOtherPlayer = this.createPlayer(document.uid, document.x, document.y, document.z, true);
-      newOtherPlayer.sprite.body.moves = false;
-      newOtherPlayer.sprite.body.immovable = true;
-      this._otherPlayers.push(newOtherPlayer);
-    }
-
-    // Set the position and direction of the other player.
-    // Loop through all players
-    this._otherPlayers.forEach((player: MinerPlayer) => {
-      if (player.uid == document.uid) {
-
-        if (document.hasFallenDown) {
-          player.sprite.destroy();
-        } else {
-          this.setPosition(player.sprite, document.x, document.y, document.z);
-          this.setDirection(player.sprite, document.direction);
-        }
-
-
-      }
-    });
-  }
-
   update() {
     // Update the cursor position.
     // It's important to understand that screen-to-isometric projection means you have to specify a z position manually, as this cannot be easily
@@ -331,6 +298,46 @@ export class Level2 extends Phaser.State {
     this._firebaseAuth.signInAnonymously();
   }
 
+  private handleOtherPlayerDocument(document: MinerPlayerDocument) {
+    var exists = false;
+
+    // Check if the player exists already, if not create it.
+    this._otherPlayers.forEach((player: MinerPlayer) => {
+      if (player.uid == document.uid)
+        exists = true;
+    });
+
+    // Create a new player if it did not exist yet.
+    if (exists == false) {
+      var newOtherPlayer = this.createPlayer(document.uid, document.x, document.y, 200, true);
+      newOtherPlayer.sprite.body.moves = false;
+      newOtherPlayer.sprite.body.immovable = true;
+      newOtherPlayer.sprite.alpha = 0;
+
+      var tween = this.game.add.tween(newOtherPlayer.sprite).to({ isoZ: 0, alpha: 1 }, 1000, Phaser.Easing.Bounce.Out);
+      tween.onComplete.add(() => {
+        newOtherPlayer.updatePosition = true;
+      });
+      tween.start();
+      this._otherPlayers.push(newOtherPlayer);
+    }
+
+    // Set the position and direction of the other player.
+    // Loop through all players
+    this._otherPlayers.forEach((player: MinerPlayer) => {
+      if (player.uid == document.uid) {
+        if (document.hasFallenDown) {
+          player.sprite.destroy();
+        }
+        else {
+          if (player.updatePosition)
+            this.setPosition(player.sprite, document.x, document.y, document.z);
+          this.setDirection(player.sprite, document.direction);
+        }
+      }
+    });
+  }
+
   private spawnTiles(): void {
     var tileArray = [];
     tileArray[0] = 'water';
@@ -419,7 +426,8 @@ export class Level2 extends Phaser.State {
     return {
       uid: uid,
       direction: Direction.S,
-      sprite: playerSprite
+      sprite: playerSprite,
+      updatePosition: isOtherPlayer ? false : true
     };
   }
 
